@@ -48,23 +48,25 @@ class WitherInterpreter(object):
             match s["id"]:
                 case "Match":
                     if tape.startswith(s[0]):
-                        print(f"Matched {s} {i} {tape}")
+                        print(f"Matched {s[0]} {i} {tape}")
                         tape = tape[len(s[0]):]
                     else:
                         return (False, tape)
                 case "Optional":
                     f = s[0]
-                    (v, l) = self.recurse("Optional", f, tape)
+                    (v, l) = self.recurse(i, f, tape)
                     if v:
                         tape = l
                 case "Repeat":
                     f = s[0]
                     (v, l) = (True, tape)
                     while v:
-                        (v, l) = self.recurse("Repeat", f, tape)
+                        (v, l) = self.recurse(i, f, tape)
                         if(v):
                             tape = l
-                        pass
+                        else:
+                            print(f"Done matching repeat for {i}")
+                        
                 case "Goto":
                     #print(f"Going: {self.machine[s[0]]}")
                     (v, l) = self.recurse(s[0], self.machine[s[0]], tape)
@@ -76,7 +78,6 @@ class WitherInterpreter(object):
                     for v in [s[v] for v in s if type(v) is int]:
                         (v, l) = self.recurse(i, v, tape)
                         if v:
-
                             tape = l
                             break;
                     else:
@@ -162,7 +163,12 @@ print()
 print()
 print()
 input()
-i.run("{ {'hello world' -> (a * 2) -> ~b -> @{c,d}; } -> main; ~main; }")
-
-
+src = """
+{
+    a -> b;
+    c -> d;
+    @{e->g->z,f} -> {m->n;};
+}
+"""
+i.run(src)
 print("finished!?")
