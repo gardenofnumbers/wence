@@ -1,7 +1,7 @@
 import json
 
 src = """
-printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" 
+printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
 letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
 hex         := "a" | "b" | "c" | "d" | "e" | "f"
 digit       := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
@@ -128,10 +128,6 @@ class witherParser(object):
             except TerminationFound:
                 if not 1 in subseries:
                     subseries = subseries[0]
-                    print()
-                    print(f"unfolded subseries: {len(subseries)}")
-                    print(f"unfolded subseries: {subseries}")
-                    print()
                 else:
                     subseries = [subseries]
                 series[idx].append({"id":"Optional", 0:  subseries})
@@ -144,10 +140,6 @@ class witherParser(object):
             except TerminationFound:
                 if not 1 in subseries:
                     subseries = subseries[0]
-                    print()
-                    print(f"unfolded subseries: {len(subseries)}")
-                    print(f"unfolded subseries: {subseries}")
-                    print()
                 else:
                     subseries = [subseries]
                 series[idx].append({"id":"Repeat", 0: subseries})
