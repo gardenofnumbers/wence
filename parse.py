@@ -183,20 +183,14 @@ class Parser(object):
                     head = node;
 
                 c = self.peek();
-                if c == ';':
+                if c == ';' or c == ',':
                     self.pop();
-                    dlm = ASTNode0("DROP", None);
+                    dlm = ASTNode0("DROP", None) if c == ';' else ASTNode0("PUSH", None);
                     node.link(dlm);
                     if pn is not None:
                         pn.link(node)
                     pn = dlm;
-                elif c == ',':
-                    self.pop();
-                    dlm = ASTNode0("PUSH", None);
-                    node.link(dlm);
-                    if pn is not None:
-                        pn.link(node)
-                    pn = dlm;
+                
                 else:
                     self.unpeek()
                     if pn is not None:
@@ -238,11 +232,6 @@ class Parser(object):
         if a in l:
             self.pop();
             return ASTNode0("OP", a)
-
-        
-
-        
-
 
     def parseEquation(self):
         if not self.test("("):
@@ -349,13 +338,6 @@ class Parser(object):
             pn = node
             if done:
                 return head
-
-
-
-
-
-            
-
 
     def parse(self):
         return self.parseBlock();

@@ -1,65 +1,117 @@
-src = """letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+import json
+
+src = """
+printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" 
+letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
 hex         := "a" | "b" | "c" | "d" | "e" | "f"
 digit       := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 operator    := "/" | "*" | "+" | "-" | "%" | "&" | "|" | "^" | "~" | "!" | "=" | ">" | "<" | "<<" | ">>" | "<=" | ">=" | "!=" | "=="
 this        := "%"
 sysc        := "^"
-string      := "'" ?( *{ ! "'" } ) "'"
+string      := "'" ?( *{ printable } ) "'"
 integer     := "0x" *{ digit | hex } | digit ?( *{ digit } )
 array       := "[" *{ expression ?( "," ) } "]"
 constant    := integer | string | array
-label       := letter ?( *{ letter | digit } ) 
+name       := letter ?( *{ letter | digit } ) 
 subscript   := "[" expression "]
 equation    := "(" expression ?( operator expression ) ")"
 statement   := expression ?( *{ "->" expression } )
 block       := "{" ?( unglom ) *{ statement ?( ";" ) } "}"
-dict        := "${" *{ expression ":" expression ?(",") } "}"
-filter      := "?{" *{ expression ":" expression ?(",") } "}"
-glom        := "@{" *{ statement ?(",") } "}"
-unglom      := "#{" *{ label ?( "," ) } "}"
-expression2 := block | filter | dict | glom | equation | label | constant | this | sysc
+dict        := "${" *{ expression ":" expression ?( "," ) } "}"
+filter      := "?{" *{ expression ":" expression ?( "," ) } "}"
+glom        := "@{" *{ statement ?( "," ) } "}"
+unglom      := "#{" *{ name ?( "," ) } "}"
+expression2 := block | filter | dict | glom | equation | name | constant | this | sysc
 expression  := ?( "~" ) expression2 ?( *{ subscript } ) """
+
+
 class TerminationFound(Exception):
     pass
-
-class ParseTree(object):
-    pass
-
-class ParseTreeNode(object):
-    pass
-
-class WhitherEngine(object):
-    def __init__(self):
-        self.tree = ParseTree()
-        self.currentState = "block"
-    def Characters(self, chars):
-        def _matchCharacters(tape):
-            if tape.startswith(chars):
-                return tape[len(chars):]
-            else:
-                #what do?
-                print(chars)
-                print(tape)
-                raise RuntimeError("Crap")
-            
-        return _matchCharacters
-    def Optional(self, subseries):
-        def _matchOptional(tape):
-            return tape
-        return _matchOptional
-    def Repeat(self, subseries):
-        def _matchRepeat(tape):
-            return self.runState(subseries, tape)
-        return _matchRepeat
-    def Goto(self, state):
-        def _matchGoto(tape):
-            print(f"{self.currentState} TO {state}")
-            self.currentState = state
-            return self.runState(self.states[state], tape)
-        return _matchGoto
-
+class SourceProvider(object):
+    def __init__(self, source):
+        self.source = source
+    
+class WitherInterpreter(object):
+    def __init__(self, machine):
+        self.machine = machine
         
-    def recurse(self, tape, series, terminate = ""):
+    def run(self, source):
+        self.tape = source.replace(" ", "").replace("\n", "").replace("\t", "") 
+        (v, l) = self.recurse("block", self.machine["block"], self.tape)
+        if not v:
+            print(f"Error while processing at {l}")
+
+    def recurse(self, i, sl, tape):
+        #print(f"Enter node {i} {tape}")
+        for s in sl:
+            #print(f"subnode {s}")
+            match s["id"]:
+                case "Match":
+                    if tape.startswith(s[0]):
+                        print(f"Matched {s} {i} {tape}")
+                        tape = tape[len(s[0]):]
+                    else:
+                        return (False, tape)
+                case "Optional":
+                    f = s[0]
+                    (v, l) = self.recurse("Optional", f, tape)
+                    if v:
+                        tape = l
+                case "Repeat":
+                    f = s[0]
+                    (v, l) = (True, tape)
+                    while v:
+                        (v, l) = self.recurse("Repeat", f, tape)
+                        if(v):
+                            tape = l
+                        pass
+                case "Goto":
+                    #print(f"Going: {self.machine[s[0]]}")
+                    (v, l) = self.recurse(s[0], self.machine[s[0]], tape)
+                    if not v:
+                        return (False, tape)
+                    tape = l
+
+                case "Any":
+                    for v in [s[v] for v in s if type(v) is int]:
+                        (v, l) = self.recurse(i, v, tape)
+                        if v:
+
+                            tape = l
+                            break;
+                    else:
+                        return (False, tape)
+        
+        return (True, tape)
+                    
+                    
+
+class witherParser(object):
+    def __init__(self):
+        self.states = {}
+    def ingest(self, source):
+        source = list(filter(None, source.split ("\n")))
+        print(f"Processing {len(source)} lines of wither")
+        for line in source:
+            self.ingestLine(line);
+        return WitherInterpreter(self.states)
+    def ingestLine(self, line):
+        words = list(filter(None, line.split(" ")))
+        print(f"Processing {len(words)} words of wither {words}")
+        s = words[0]
+        if s in self.states:
+            raise RuntimeError(f"Redeclaration of state {s}!")
+        if words[1] != ":=":
+            raise RuntimeError("Syntax error (expected := after state name)")
+        stateSeries = {0: [], "id":"Any"}#SparseList()
+        self.recurse(words[2:], stateSeries)
+        if 1 not in stateSeries:
+            stateSeries = stateSeries[0]
+        else:
+            stateSeries = [stateSeries]
+        self.states[s] = stateSeries
+        
+    def recurse(self, tape, series, terminate = "", idx=0):
         if len(tape) == 0:
             if terminate != "":
                 raise RuntimeError(f"Expected to reach {terminate} before EOL")
@@ -67,76 +119,58 @@ class WhitherEngine(object):
         word = tape.pop(0)
         if word == terminate:
             raise TerminationFound
-        
         if word.startswith('"'):
-            series.append(self.Characters(word.strip('"')))
+            series[idx].append({"id":"Match", 0: word.strip('"')})
         elif word == "?(":
-            subseries = []
+            subseries = {0: [], "id":"Any"}#SparseList()         
             try:
-                self.recurse(tape, subseries, terminate=")")
+                self.recurse(tape, subseries, terminate=")", idx=0)
             except TerminationFound:
-                series.append(self.Optional(subseries))
+                if not 1 in subseries:
+                    subseries = subseries[0]
+                    print()
+                    print(f"unfolded subseries: {len(subseries)}")
+                    print(f"unfolded subseries: {subseries}")
+                    print()
+                else:
+                    subseries = [subseries]
+                series[idx].append({"id":"Optional", 0:  subseries})
             else:
                 raise RuntimeError("This should be unreachable?? parsing ?( fail")
         elif word == "*{":
-            subseries = []
+            subseries = {0: [], "id":"Any"}#SparseList()#{0: []}
             try:
-                self.recurse(tape, subseries, terminate="}")
+                self.recurse(tape, subseries, terminate="}", idx=0)
             except TerminationFound:
-                series.append(self.Repeat(subseries))
+                if not 1 in subseries:
+                    subseries = subseries[0]
+                    print()
+                    print(f"unfolded subseries: {len(subseries)}")
+                    print(f"unfolded subseries: {subseries}")
+                    print()
+                else:
+                    subseries = [subseries]
+                series[idx].append({"id":"Repeat", 0: subseries})
             else:
                 raise RuntimeError("This should be unreachable?? parsing *{ fail")
-        elif word.isalnum:
-            series.append(self.Goto(word))
+        elif word.isalnum():
+            series[idx].append({"id":"Goto", 0:  word})
+        elif word == "|":
+            idx += 1;
+            series[idx] = []
         else:
             raise RuntimeError(f"Unimplemented word {word}")
-        self.recurse(tape, series, terminate)
+        self.recurse(tape, series, terminate=terminate, idx=idx)
 
-    def runState(self, state, tape):
-        print(state)
-        for s in state:
-            tape = s(tape);
-            print(s)
-            print(tape)
-        return tape
-
-
-class WhitherParser(object):
-    def __init__(self):
-        self.engine = WhitherEngine()
-        self.states = {}
-    def ingest(self, source):
-        source = list(filter(None, source.split ("\n")))
-        print(f"Processing {len(source)} lines of whither")
-        for line in source:
-            self.ingestLine(line);
-        self.engine.states = self.states
-
-    def ingestLine(self, line):
-        words = list(filter(None, line.split(" ")))
-        print(f"Processing {len(words)} words of whither")
-        s = words[0]
-        if s in self.states:
-            raise RuntimeError(f"Redeclaration of state {s}!")
-        if words[1] != ":=":
-            raise RuntimeError("Syntax error (expected := after state name)")
-
-        stateSeries = []
-        self.engine.recurse(words[2:], stateSeries)
-        self.states[s] = stateSeries
-        
-        
-    def execute(self, src):
-        self.engine.runState(self.states["block"], "{" + src +  "}")
-
-    
+p = witherParser();
+i = p.ingest(src);
+print(src)
+print(json.dumps(p.states))
+print()
+print()
+print()
+input()
+i.run("{ {'hello world' -> (a * 2) -> ~b -> @{c,d}; } -> main; ~main; }")
 
 
-        
-
-
-
-p = WhitherParser();
-p.ingest(src);
-
-p.execute('{ "hello world" -> (a * 2) -> ~b -> {c,d} -> |; } -> main; ~main;')
+print("finished!?")
