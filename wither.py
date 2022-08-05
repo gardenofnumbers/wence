@@ -5,59 +5,116 @@ printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" |
 letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
 hex         := "a" | "b" | "c" | "d" | "e" | "f"
 digit       := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-operator    := "/" | "*" | "+" | "-" | "%" | "&" | "|" | "^" | "~" | "!" | "=" | ">" | "<" | "<<" | ">>" | "<=" | ">=" | "!=" | "=="
+operator    := "<<" | ">>" | "<=" | ">=" | "!=" | "==" | "/" | "*" | "+" | "-" | "%" | "&" | "|" | "^" | "~" | "!" | "=" | ">" | "<" 
 this        := "%"
 sysc        := "^"
 string      := "'" ?( *{ printable } ) "'"
 integer     := "0x" *{ digit | hex } | digit ?( *{ digit } )
-array       := "[" *{ expression ?( "," ) } "]"
+array       := "[" *{ expression ?( comma ) } "]"
 constant    := integer | string | array
-name       := letter ?( *{ letter | digit } ) 
+name        := letter ?( *{ letter | digit } ) 
 subscript   := "[" expression "]
 equation    := "(" expression ?( operator expression ) ")"
 statement   := expression ?( *{ "->" expression } )
-block       := "{" ?( unglom ) *{ statement ?( ";" ) } "}"
-dict        := "${" *{ expression ":" expression ?( "," ) } "}"
-filter      := "?{" *{ expression ":" expression ?( "," ) } "}"
-glom        := "@{" *{ statement ?( "," ) } "}"
-unglom      := "#{" *{ name ?( "," ) } "}"
+block       := "{" ?( unglom ) *{ statement ?( semicolon ) } "}"
+twople      := expression colon expression
+dict        := "${" *{ twople ?( comma ) } "}"
+filter      := "?{" *{ twople ?( comma ) } "}"
+glom        := "@{" *{ expression ?( comma ) } "}"
+unglom      := "#{" *{ name ?( comma ) } "}"
 expression2 := block | filter | dict | glom | equation | name | constant | this | sysc
-expression  := ?( "~" ) expression2 ?( *{ subscript } ) """
+expression  := ?( "~" ) expression2 ?( *{ subscript } ) 
+semicolon   := ";"
+colon       := ":"
+comma       := ","
+file        := *{ statement semicolon } 
+
+"""
 
 
 class TerminationFound(Exception):
     pass
-class SourceProvider(object):
-    def __init__(self, source):
-        self.source = source
-    
+
+class WitherStack(object):
+    def __init__(self):
+        self.s  = []
+        self.b = []
+    def new_frame(self):
+        self.s.insert(0, self.b)
+        self.b = []
+        #print(f"@@@@ -> @@@ {json.dumps(self.s)}")
+    def end_frame(self):
+        #print(f"@@@@ <- @@@ {json.dumps(self.b)}")
+        _ = self.b
+        self.b = self.s.pop(0)
+        return _
+    def buffer(self, v):
+        #print(f"@@@@    @@@ {json.dumps(v)}")
+        self.b.append(v)
+    def extend(self, v):
+        self.b += v
+        #print(f"@@@@ ## @@@ {json.dumps(self.b)}")
 class WitherInterpreter(object):
     def __init__(self, machine):
         self.machine = machine
-        
+        self.stack   = WitherStack();
+        self.tags    = [ 
+                        'this', 
+                        'sysc', 
+                        'string', 
+                        'integer', 
+                        'array', 
+                        'constant', 
+                        'name', 
+                        'subscript', 
+                        'equation', 
+                        'statement', 
+                        'block',
+                        'twople', 
+                        'dict', 
+                        'filter', 
+                        'glom', 
+                        'unglom', 
+                         
+                        'file']
+        self.drop = [';', '{', '}','(', ')', '[',']', ',', '@{', '${', '?{', ',', ':', '->']
+
     def run(self, source):
         self.tape = source.replace(" ", "").replace("\n", "").replace("\t", "") 
-        (v, l) = self.recurse("block", self.machine["block"], self.tape)
+        self.stack.new_frame();
+        (v, l) = self.recurse("file", self.machine["file"], self.tape)
         if not v:
             print(f"Error while processing at {l}")
+        out = {
+            'id':"file"
+        }
+        for i,s in enumerate(self.stack.end_frame()):
+            out[i] = s
+        return out
+         
 
     def recurse(self, i, sl, tape):
-        #print(f"Enter node {i} {tape}")
         for s in sl:
             #print(f"subnode {s}")
             match s["id"]:
                 case "Match":
                     if tape.startswith(s[0]):
-                        print(f"Matched {s[0]} {i} {tape}")
+                        #print(f"____ Matched {s[0]} {i} {tape}")
                         tape = tape[len(s[0]):]
+                        if not s[0] in self.drop:
+                            self.stack.buffer(s)
+
                     else:
                         return (False, tape)
                 case "Optional":
+                    
                     f = s[0]
                     (v, l) = self.recurse(i, f, tape)
                     if v:
                         tape = l
                 case "Repeat":
+                    #print(f"Begin matching repeat for {i}")
+                    self.stack.new_frame();
                     f = s[0]
                     (v, l) = (True, tape)
                     while v:
@@ -65,13 +122,24 @@ class WitherInterpreter(object):
                         if(v):
                             tape = l
                         else:
-                            print(f"Done matching repeat for {i}")
+                            f = self.stack.end_frame()
+                            #print(f"Done matching repeat for {i} {json.dumps(f)}")
+                            self.stack.extend(f)
                         
                 case "Goto":
-                    #print(f"Going: {self.machine[s[0]]}")
+                    #print(f"Going: {s[0]}")
+                    self.stack.new_frame()
                     (v, l) = self.recurse(s[0], self.machine[s[0]], tape)
                     if not v:
+                        self.stack.end_frame();
                         return (False, tape)
+                    else:
+                        f = self.stack.end_frame()
+                        if s[0] in self.tags:
+                            #print(f")(}}{{)( from {s[0]} {json.dumps(f)}")                            
+                            self.stack.buffer({"id": s[0], 0: f})
+                        else:
+                            self.stack.extend(f)
                     tape = l
 
                 case "Any":
@@ -82,7 +150,6 @@ class WitherInterpreter(object):
                             break;
                     else:
                         return (False, tape)
-        
         return (True, tape)
                     
                     
@@ -90,6 +157,7 @@ class WitherInterpreter(object):
 class witherParser(object):
     def __init__(self):
         self.states = {}
+        
     def ingest(self, source):
         source = list(filter(None, source.split ("\n")))
         print(f"Processing {len(source)} lines of wither")
@@ -162,13 +230,29 @@ print(json.dumps(p.states))
 print()
 print()
 print()
-input()
+#import code; code.interact(local=locals());
+
 src = """
 {
-    a -> b;
-    c -> d;
-    @{e->~g->z,f} -> {m->n;};
-}
+    @{a,b} -> ?{ 
+        (b==0) : {a;}, 
+        (1): { a % b - > r; @{b,r} -> ~euclid;}
+    };
+} -> z;
+{
+    @{2740, 1760} -> ~euclid;
+} -> main;
+~main;
 """
-i.run(src)
+
+#src = """
+#'hello world' -> a;
+#a -> b;
+#"""
+print(src)
+
+tree = i.run(src)
+
 print("finished!?")
+print()
+print(json.dumps(tree))
