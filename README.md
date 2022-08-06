@@ -5,6 +5,8 @@ WIP
 
 usage: python3.10 main.py wence.wi <source>
 
-e.g. euler.we produces
+This runs the wither interpreter using the given grammer to produce a wence tree (also, phase 0 of compilation is performed, some trivial node folding and such)
 
-![this graph](https://imgur.com/ogMSVRq)
+e.g. `euclid.we` produces
+
+![this graph](images/euclid.png)
