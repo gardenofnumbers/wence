@@ -1,19 +1,25 @@
-
+from wither import witherParser, WitherInterpreter
+import json
 import sys
 
-from parse import Parser;
+if len(sys.argv) < 3:
+    print(f"Proper usage: {sys.argv[0]} <wither machine> <source>")
+    exit(0);
 
-#src = '{"hello world"->|;}->main;~main;
-src = '{ "hello world" -> (a * 2) -> ~b -> {c,d} -> |; } -> main; ~main;'
-#src = 'a -> b -> c;'
+with open(sys.argv[1], 'r') as f:
+    p = witherParser(f.read())
+    i = WitherInterpreter(p.states)
+with open(sys.argv[2], 'r') as f:
+    src = f.read();
 
+print(src)
+print(json.dumps(p.states))
+print()
+print()
+print()
+import code; code.interact(local=locals());
+tree = i.run(src)
 
-p = Parser("{" + src + "}");
-z = p.parse();
-
-
-print(src);
-print(z);
-
-print(z.graph());
-
+print("finished!?")
+print()
+print(json.dumps(tree))

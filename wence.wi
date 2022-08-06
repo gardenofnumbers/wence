@@ -1,0 +1,29 @@
+printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
+letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+hex         := "a" | "b" | "c" | "d" | "e" | "f"
+digit       := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+operator    := "<<" | ">>" | "<=" | ">=" | "!=" | "==" | "/" | "*" | "+" | "-" | "%" | "&" | "|" | "^" | "~" | "!" | "=" | ">" | "<" 
+glob        := "%"
+this        := "_"
+sysc        := "^"
+invoke      := "~"
+string      := "'" ?( *{ printable } ) "'"
+integer     := "0x" *{ digit | hex } | digit ?( *{ digit } )
+array       := "[" *{ expression ?( comma ) } "]"
+constant    := integer | string | array
+name        := letter ?( *{ letter | digit } ) 
+subscript   := "[" expression "]
+equation    := "(" expression ?( operator expression ) ")"
+statement   := expression ?( *{ "->" expression } )
+block       := "{" ?( unglom ) *{ statement semicolon } "}"
+twople      := expression colon expression
+dict        := "${" *{ twople ?( comma ) } "}"
+filter      := "?{" *{ twople ?( comma ) } "}"
+glom        := "@{" *{ expression ?( comma ) } "}"
+unglom      := "#{" *{ name ?( comma ) } "}" semicolon
+expression2 := block | filter | dict | glom | unglom | equation | name | constant | glob | this | sysc
+expression  := ?( invoke ) expression2 ?( *{ subscript } ) 
+semicolon   := ";"
+colon       := ":"
+comma       := ","
+file        := *{ statement semicolon } 
