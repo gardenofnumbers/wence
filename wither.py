@@ -1,5 +1,5 @@
 import json
-from parse import witherParser
+
 DEBUG_INTERP = False
 DEBUG_PARSER = False
 DEBUG_STACK  = False

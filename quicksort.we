@@ -1,20 +1,4 @@
 {
-    #{arr, lo, hi}; 
-    % -> ~partition ->{
-        @{arr,lo,(%-1)} -> ~quicksort;
-        @{d,(%+1),hi} -> ~quicksort;
-    };
-} -> quicksort;
-{
-    #{arr, i, j};
-    @{arr[i], arr[j]}
-    -> ~{
-        #{arri, arrj}; 
-        arrr->arr[i]; 
-        arri->arr[j];
-    };
-} -> swap;
-{
     #{arr, lo, hi};
     @{(lo - 1), lo, arr[hi]} -> ~{
         #{i, j, v};
@@ -32,5 +16,20 @@
     @{arr, (i+1), hi} -> ~swap;
     (i+1);
 }-> partition;
-
-@{[2, 4, 6, 8, 10, 12, 13, 17, 18, 20], 0, 9} -> ~q;
+{
+    #{arr, lo, hi};
+    % -> ~partition ->{
+        @{arr,lo,(%-1)} -> ~quicksort;
+        @{arr,(%+1),hi} -> ~quicksort;
+    };
+} -> quicksort;
+{
+    #{arr, i, j};
+    @{arr[i], arr[j]}
+    -> ~{
+        #{arri, arrj}; 
+        arrr->arr[i]; 
+        arri->arr[j];
+    };
+} -> swap;
+@{[13, 28, 85, 84, 64, 99, 40, {}, 27, 32], 0, 9} -> ~quicksort;

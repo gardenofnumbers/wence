@@ -1,5 +1,5 @@
-["base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "unglom", "invoke", "file"]
-[";", "{", "}", "(", ")", "[", "]", ",", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x"]
+["constant", "base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "unglom", "invoke", "file", "glob"]
+[";", "{", "}", "(", ")", "[", "]", ",", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x", "_"]
 
 printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
 letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
@@ -15,7 +15,7 @@ base10      := digit ?( *{ digit } )
 base16      := "0x" *{ digit | hex }
 integer     := base16 | base10
 array       := "[" *{ expression ?( comma ) } "]"
-constant    := integer | string | array
+constant    := integer | string 
 name        := letter ?( *{ letter | digit } ) 
 subscript   := "[" expression "]
 equation    := "(" expression ?( operator expression ) ")"
@@ -26,7 +26,7 @@ dict        := "${" *{ twople ?( comma ) } "}"
 filter      := "?{" *{ twople ?( comma ) } "}"
 glom        := "@{" *{ expression ?( comma ) } "}"
 unglom      := "#{" *{ name ?( comma ) } "}" semicolon
-expression2 := block | filter | dict | glom | unglom | equation | name | constant | glob | this | sysc
+expression2 := block | filter | dict | glom | unglom | equation | name | constant | array | glob | this | sysc
 expression  := ?( invoke ) expression2 ?( *{ subscript } ) 
 semicolon   := ";"
 colon       := ":"
