@@ -1,4 +1,5 @@
 from wither import witherParser, WitherInterpreter
+from wence import WenceCompiler
 import json
 import sys
 
@@ -8,18 +9,18 @@ if len(sys.argv) < 3:
 
 with open(sys.argv[1], 'r') as f:
     p = witherParser(f.read())
-    i = WitherInterpreter(p.states)
+    i = WitherInterpreter(p.states, p.hdr)
 with open(sys.argv[2], 'r') as f:
     src = f.read();
 
 print(src)
-print(json.dumps(p.states))
-print()
-print()
-print()
-import code; code.interact(local=locals());
 tree = i.run(src)
 
 print("finished!?")
+
+
+c = WenceCompiler(tree);
+c.compile()
+print()
 print()
 print(json.dumps(tree))

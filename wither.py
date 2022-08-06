@@ -1,6 +1,8 @@
 import json
 from parse import witherParser
-
+DEBUG_INTERP = False
+DEBUG_PARSER = False
+DEBUG_STACK  = False
 class TerminationFound(Exception):
     pass
 class witherParser(object):
@@ -9,10 +11,13 @@ class witherParser(object):
         self.ingest(src);
     def ingest(self, source):
         source = list(filter(None, source.split ("\n")))
+        hdr = source[:2]
+        source = source[2:]
+        self.hdr = hdr
         print(f"Processing {len(source)} lines of wither")
         for line in source:
             self.ingestLine(line);
-        return self.states
+        
         
     def ingestLine(self, line):
         words = list(filter(None, line.split(" ")))
@@ -31,7 +36,8 @@ class witherParser(object):
         self.states[s] = stateSeries
         
     def recurse(self, tape, series, terminate = "", idx=0):
-        print(f"{chr(9)*idx}Recurse ({terminate}): {series} {tape}")
+        if DEBUG_PARSER:
+            print(f"{chr(9)*idx}Recurse ({terminate}): {series} {tape}")
         if len(tape) == 0:
             if terminate != "":
                 raise RuntimeError(f"Expected to reach {terminate} before EOL")
@@ -82,45 +88,31 @@ class WitherStack(object):
     def new_frame(self):
         self.s.insert(0, self.b)
         self.b = []
-        print(f"@@@@ -> @@@ {json.dumps(self.s)}")
+        if DEBUG_STACK:
+            print(f"@@@@ -> @@@ {json.dumps(self.s)}")
     def end_frame(self):
-        print(f"@@@@ <- @@@ {json.dumps(self.s)}")
-        print(f"            {json.dumps(self.b)}")
+        if DEBUG_STACK:
+            print(f"@@@@ <- @@@ {json.dumps(self.s)}")
+            print(f"            {json.dumps(self.b)}")
         _ = self.b
         self.b = self.s.pop(0)
         return _
     def buffer(self, v):
         self.b.append(v)
-        print(f"@@@@    @@@ {json.dumps(self.b)}")
+        if DEBUG_STACK:
+            print(f"@@@@    @@@ {json.dumps(self.b)}")
     def extend(self, v):
         self.b += v
-        print(f"@@@@ ## @@@ {json.dumps(self.b)}")
+        if DEBUG_STACK:
+            print(f"@@@@ ## @@@ {json.dumps(self.b)}")
 
 
 class WitherInterpreter(object):
-    def __init__(self, machine):
+    def __init__(self, machine, hdr):
         self.machine = machine
         self.stack   = WitherStack();
-        self.tags    = [ 
-                        'this', 
-                        'sysc', 
-                        'string', 
-                        'integer', 
-                        'array', 
-                        'constant', 
-                        'name', 
-                        'subscript', 
-                        'equation', 
-                        'statement', 
-                        'block',
-                        'twople', 
-                        'dict', 
-                        'filter', 
-                        'glom', 
-                        'unglom', 
-                        'invoke',
-                        'file']
-        self.drop = [';', '{', '}','(', ')', '[',']', ',', '@{', '${', '?{', ',', ':', '->', '#{', '~', '%']
+        self.tags    = json.loads(hdr[0])
+        self.drop    = json.loads(hdr[1])
         
     def run(self, source):
         self.tape = source.replace(" ", "").replace("\n", "").replace("\t", "") 
@@ -141,7 +133,8 @@ class WitherInterpreter(object):
             match s["id"]:
                 case "Match":
                     if tape.startswith(s[0]):
-                        print(f"____ Matched {s[0]} {i} {tape}")
+                        if DEBUG_INTERP:
+                            print(f"____ Matched {s[0]} {i} {tape}")
                         tape = tape[len(s[0]):]
                         if not s[0] in self.drop:
                             self.stack.buffer({
@@ -169,7 +162,8 @@ class WitherInterpreter(object):
                             self.stack.extend(f)
                         
                 case "Goto":
-                    print(f")(}}{{)( call {i} -> {s[0]} {tape}")
+                    if DEBUG_INTERP:
+                        print(f")(}}{{)( call {i} -> {s[0]} {tape}")
                     self.stack.new_frame()
                     (v, l) = self.recurse(s[0], self.machine[s[0]], tape)
                     if not v:
@@ -178,8 +172,10 @@ class WitherInterpreter(object):
                     else:
                         f = self.stack.end_frame()
                         if s[0] in self.tags:
-                            print(f")(}}{{)( retn {s[0]} -> {i} {json.dumps(f)}")                            
-                            self.stack.buffer({"id": s[0], 0: f})
+                            if DEBUG_INTERP:
+                                print(f")(}}{{)( retn {s[0]} -> {i} {json.dumps(f)}")           
+                            box = lambda x: dict(zip(range(len(x)), x))                 
+                            self.stack.buffer( { **{"id": s[0]}, **box(f)} )     #{"id": s[0], 0: f})
                         else:
                             self.stack.extend(f)
                     tape = l
