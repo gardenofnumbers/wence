@@ -1,4 +1,3 @@
-from curses import wrapper
 import json
 from functools import wraps
 
@@ -69,6 +68,7 @@ class WenceCompilerPass0(object):
     @_called
     def P0_Block(self,node, parent, idx):
         node['eid'] = self.eid
+        node['id'] = 'BLOCK'
         self.ast["blocks"][self.eid] = node
         parent[idx] = {
             "id": "BLOCK_REF",
@@ -94,6 +94,13 @@ class WenceCompilerPass0(object):
         del parent[idx+1]
         node['id'] = "INVOKE"
         return True
+
+    @_called
+    def P0_equation(self, node, parent, idx):
+
+        return True
+
+
 
     def __init__(self, ast, walker):
         self.handlers = {

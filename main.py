@@ -19,7 +19,7 @@ tree = i.run(src)
 print("finished!?")
 
 
-c = WenceCompiler(tree);
+c = WenceCompiler(tree); 
 c.compile()
 print()
 print()
