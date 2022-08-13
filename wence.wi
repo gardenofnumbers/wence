@@ -1,35 +1,38 @@
-["constant", "base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "unglom", "invoke", "file", "glob"]
+["constant", "base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "arguments", "flowpoint", "file", "glob", "source", "sink"]
 [";", "{", "}", "(", ")", "[", "]", ",", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x", "_"]
 
 printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
 letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
-hex         := "a" | "b" | "c" | "d" | "e" | "f"
+hex         := "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F"
 digit       := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 operator    := "<<" | ">>" | "<=" | ">=" | "!=" | "==" | "/" | "*" | "+" | "-" | "%" | "&" | "|" | "^" | "~" | "!" | "=" | ">" | "<" 
 glob        := "%"
 this        := "_"
 sysc        := "^"
-invoke      := "~"
 string      := "'" ?( *{ printable } ) "'"
 base10      := digit ?( *{ digit } )
 base16      := "0x" *{ digit | hex }
 integer     := base16 | base10
-array       := "[" *{ expression ?( comma ) } "]"
+array       := "[" *{ expression "," } ?( expression ) "]"
 constant    := integer | string 
 name        := letter ?( *{ letter | digit } ) 
-subscript   := "[" expression "]
+subscript   := "[" ?( expression ) "]"
 equation    := "(" expression ?( operator expression ) ")"
-statement   := expression ?( *{ "->" expression } )
-block       := "{" ?( unglom ) *{ statement semicolon } "}"
-twople      := expression colon expression
-dict        := "${" *{ twople ?( comma ) } "}"
-filter      := "?{" *{ twople ?( comma ) } "}"
-glom        := "@{" *{ expression ?( comma ) } "}"
-unglom      := "#{" *{ name ?( comma ) } "}" semicolon
-expression2 := block | filter | dict | glom | unglom | equation | name | constant | array | glob | this | sysc
-expression  := ?( invoke ) expression2 ?( *{ subscript } ) 
-semicolon   := ";"
-colon       := ":"
-comma       := ","
-file        := *{ statement semicolon } 
+
+arguments   := "!{" *{ name "," } ?( name ) "}"
+flowpoint   := "#{" *{ name "," } ?( name ) "}"
+glom        := "@{" *{ expression "," } ?( expression ) "}"
+node        := flowpoint | expression
+statement   := ?( node ) ?( *{ "->" node } ) ?( "->" node ) 
+
+block       := "{" ?( arguments ) *{ statement ";" } ?( statement ) "}"
+twople      := expression ":" expression
+dict        := "${" *{ twople "," } ?( twople ) "}"
+filter      := "?{" *{ twople "," } ?( twople ) "}"
+
+subbable   := name | array | string
+expression := block | filter | dict | glom | equation | subbable ?( *{ subscript } ) | integer | this | sysc | glob
+
+file        := *{ statement ";" } ?( statement )
+
 

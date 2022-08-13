@@ -1,6 +1,6 @@
 import json
 
-DEBUG_INTERP = False
+DEBUG_INTERP = True
 DEBUG_PARSER = False
 DEBUG_STACK  = False
 class TerminationFound(Exception):
@@ -43,10 +43,13 @@ class witherParser(object):
                 raise RuntimeError(f"Expected to reach {terminate} before EOL")
             return
         word = tape.pop(0)
+
         if word == terminate:
             raise TerminationFound
+
         if word.startswith('"'):
             series[idx].append({"id":"Match", 0: word.strip('"')})
+
         elif word == "?(":
             subseries = {0: [], "id":"Any"}#SparseList()         
             try:
@@ -59,6 +62,7 @@ class witherParser(object):
                 series[idx].append({"id":"Optional", 0:  subseries})
             else:
                 raise RuntimeError("This should be unreachable?? parsing ?( fail")
+
         elif word == "*{":
             subseries = {0: [], "id":"Any"}#SparseList()#{0: []}
             try:
@@ -71,11 +75,14 @@ class witherParser(object):
                 series[idx].append({"id":"Repeat", 0: subseries})
             else:
                 raise RuntimeError("This should be unreachable?? parsing *{ fail")
+       
         elif word.isalnum():
             series[idx].append({"id":"Goto", 0:  word})
+       
         elif word == "|":
             idx += 1;
             series[idx] = []
+       
         else:
             raise RuntimeError(f"Unimplemented word {word}")
         self.recurse(tape, series, terminate=terminate, idx=idx)
@@ -158,6 +165,7 @@ class WitherInterpreter(object):
                         if(v):
                             tape = l
                         else:
+                            tape = l
                             f = self.stack.end_frame()
                             self.stack.extend(f)
                         
@@ -168,12 +176,15 @@ class WitherInterpreter(object):
                     (v, l) = self.recurse(s[0], self.machine[s[0]], tape)
                     if not v:
                         self.stack.end_frame();
+                        if DEBUG_INTERP:
+                                print(f")(}}{{)( retn {s[0]} -> {i} {None}")     
                         return (False, tape)
                     else:
                         f = self.stack.end_frame()
-                        if s[0] in self.tags:
-                            if DEBUG_INTERP:
-                                print(f")(}}{{)( retn {s[0]} -> {i} {json.dumps(f)}")           
+                        if DEBUG_INTERP:
+                                print(f")(}}{{)( retn {s[0]} -> {i} {json.dumps(f)}")
+
+                        if s[0] in self.tags and tape != l:
                             box = lambda x: dict(zip(range(len(x)), x))                 
                             self.stack.buffer( { **{"id": s[0]}, **box(f)} )     #{"id": s[0], 0: f})
                         else:
