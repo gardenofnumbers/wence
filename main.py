@@ -1,5 +1,5 @@
-from wither import witherParser, WitherInterpreter
-from wence import WenceCompiler
+from wither import witherParser, WitherInterpreter, WenceCompiler
+
 import json
 import sys
 

@@ -1,5 +1,5 @@
 import json
-from WenceCompilerPass0 import WenceCompilerPass0
+from .WenceCompilerPass0 import WenceCompilerPass0
 DEBUG_WALKER = False
 
 class WenceWalker(object):
