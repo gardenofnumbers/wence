@@ -1,4 +1,4 @@
 {
     'hello world' -> #{out};
 } -> main;
-~(main[0]);
+~main;
