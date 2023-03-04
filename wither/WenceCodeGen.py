@@ -57,9 +57,12 @@ typedef enum WENCE_NODE_TYPE {{
 typedef struct wence_node {{ 
     WENCE_NODE_TYPE_t type;
     uintptr_t value;
-    struct wence_node * children[];
+    const struct wence_node * children[];
 }}wence_node_t;
-""" + self.output;
+""" + self.output + f"""
+const wence_node_t *ast_head = &node_{self.ast['nid']};
+const wence_node_t *blocks   = &node_{self.ast['blocks']['nid']};
+""";
 
         print(self.output)
         
