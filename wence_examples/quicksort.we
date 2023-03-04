@@ -1,9 +1,9 @@
 {
-    #{arr, lo, hi};
+    !{arr, lo, hi};
     @{(lo - 1), lo, arr[hi]} -> ~{
         #{i, j, v};
         _ -> ?{
-            (j < (hi-1)):{
+            (j < (hi-1)):{ 
                 ?{ (arr[j] < v): {@{arr, (i+1), j} -> ~swap; } }; 
                  @{(i+1), (j+1), v} -> ~%;
             }
@@ -13,14 +13,14 @@
     (i+a) -> _;
 }-> partition;
 {
-    #{arr, lo, hi};
+    !{arr, lo, hi};
     % -> ~partition ->{
         @{arr,lo,(%-1)} -> ~quicksort;
         @{arr,(%+1),hi} -> ~quicksort;
     };
 } -> quicksort;
 {
-    #{arr, i, j};
+    !{arr, i, j};
     @{arr[i], arr[j]}
     -> ~{
         #{arri, arrj}; 
