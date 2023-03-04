@@ -3,11 +3,10 @@ from .WenceCompilerPass0 import WenceCompilerPass0
 DEBUG_WALKER = False
 
 class WenceWalker(object):
-   
-
     def __init__(self, ast):
         self.trace = ""
         self.ast = ast
+        self.unimpl = set()
         
     def walk(self, node, handlers, depth = 0):
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
@@ -19,8 +18,9 @@ class WenceWalker(object):
             if child['id'] in handlers:
                 if not handlers[child['id']](child, node, idx):
                     continue
+            else:
+                self.unimpl.add(child['id'])
             self.walk(child, handlers, depth+1)
-
 
 class WenceCompiler(object):
     def __init__(self, ast):
@@ -30,4 +30,5 @@ class WenceCompiler(object):
     def compile(self):
         p0 = WenceCompilerPass0(self.ast, self.walker);
         ast = p0.compile()
+        print(self.walker.unimpl)
         

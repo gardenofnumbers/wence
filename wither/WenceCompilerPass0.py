@@ -77,16 +77,6 @@ class WenceCompilerPass0(object):
         self.eid += 1;
         return True
     
-    @_called
-    def P0_Constant(self, node, parent, idx):
-        node['eid'] = self.eid
-        self.ast["consts"][self.eid] = node
-        parent[idx] = {
-            "id": "CONST_REF",
-            0: self.eid
-        }
-        self.eid += 1;
-        return True
 
     @_called
     def P0_Invoke(self, node, parent, idx):
@@ -97,7 +87,6 @@ class WenceCompilerPass0(object):
 
     @_called
     def P0_equation(self, node, parent, idx):
-
         return True
 
 
@@ -108,7 +97,6 @@ class WenceCompilerPass0(object):
             "name": self.P0_Name,
             "integer" : self.P0_Integer,
             "block": self.P0_Block,  
-            "constant": self.P0_Constant,
             "invoke":self.P0_Invoke,
         }
         self.ast = ast
@@ -116,7 +104,7 @@ class WenceCompilerPass0(object):
         self.do_more = False
         self.walker = walker
         self.ast["blocks"] = {'id': "BLOCK_STORE"}
-        self.ast["consts"] = {"id": "CONST_STORE"}
+ 
     def compile(self):
         while True:
             self.do_more = False
