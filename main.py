@@ -13,7 +13,6 @@ with open(sys.argv[1], 'r') as f:
 with open(sys.argv[2], 'r') as f:
     src = f.read();
 
-print(src)
 tree = i.run(src)
 
 print("finished!?")

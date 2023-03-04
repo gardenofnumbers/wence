@@ -19,7 +19,6 @@ constant    := integer | string
 name        := letter ?( *{ letter | digit } ) 
 subscript   := "[" ?( expression ) "]"
 equation    := "(" expression ?( operator expression ) ")"
-
 arguments   := "!{" *{ name "," } ?( name ) "}"
 flowpoint   := "#{" *{ name "," } ?( name ) "}"
 glom        := "@{" *{ expression "," } ?( expression ) "}"
@@ -31,7 +30,7 @@ twople      := expression ":" expression
 dict        := "${" *{ twople "," } ?( twople ) "}"
 filter      := "?{" *{ twople "," } ?( twople ) "}"
 exprvalue   := block | filter | dict | glom | equation | subbable ?( *{ subscript } ) | integer | this | sysc | glob
-expression := ?( invoke ) exprvalue
+expression  := ?( invoke ) exprvalue
 subbable    := name | array | string
 file        := *{ statement ";" } ?( statement )
 

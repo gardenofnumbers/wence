@@ -115,8 +115,8 @@ class WenceCompilerPass0(object):
         self.eid = 0
         self.do_more = False
         self.walker = walker
-        self.ast["blocks"] = {'id': "BLOCK_STORE "}
-        self.ast["consts"] = {"id": "CONST_STORE "}
+        self.ast["blocks"] = {'id': "BLOCK_STORE"}
+        self.ast["consts"] = {"id": "CONST_STORE"}
     def compile(self):
         while True:
             self.do_more = False
