@@ -1,5 +1,5 @@
-["constant", "base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "arguments", "flowpoint", "forkpoint", "file", "glob"]
-[";", "{", "}", "(", ")", "[", "]", ",", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x", "_", "|"]
+["constant", "base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "arguments", "flowpoint", "forkpoint", "file", "glob","invoke"]
+[";", "{", "}", "(", ")", "[", "]", ",", "!{", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x", "_", "|"]
 
 printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
 letter      := "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
@@ -9,6 +9,7 @@ operator    := "<<" | ">>" | "<=" | ">=" | "!=" | "==" | "/" | "*" | "+" | "-" |
 glob        := "%"
 this        := "_"
 sysc        := "^"
+invoke      := "~"
 string      := "'" ?( *{ printable } ) "'"
 base10      := digit ?( *{ digit } )
 base16      := "0x" *{ digit | hex }
@@ -29,10 +30,9 @@ block       := "{" ?( arguments ) *{ statement ";" } ?( statement ) "}"
 twople      := expression ":" expression
 dict        := "${" *{ twople "," } ?( twople ) "}"
 filter      := "?{" *{ twople "," } ?( twople ) "}"
-
-subbable   := name | array | string
-expression := block | filter | dict | glom | equation | subbable ?( *{ subscript } ) | integer | this | sysc | glob
-
+exprvalue   := block | filter | dict | glom | equation | subbable ?( *{ subscript } ) | integer | this | sysc | glob
+expression := ?( invoke ) exprvalue
+subbable    := name | array | string
 file        := *{ statement ";" } ?( statement )
 
 
