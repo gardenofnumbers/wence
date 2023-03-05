@@ -28,10 +28,10 @@ class WenceCompilerPass1(object):
         self.fid += 1
         return True
     
+    #statements must be processed after all p0 manipulation is done, or things bork.
     @_called
     def P0_statement(self, node, parent, idx):
         #reorder statement 
-
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
         first = children[0]
         #when in doubt, perform fuckery
@@ -46,10 +46,15 @@ class WenceCompilerPass1(object):
         return True
     
     def __init__(self, ast, walker):
-        self.handlers = {
+        self.handlers1 = {
             #"flowpoint":self.P0_flowpoint,
             "statement":self.P0_statement,
         }
+        self.handlers1 = {
+            #"flowpoint":self.P0_flowpoint,
+            #"statement":self.P0_statement,
+        }
+        self
         self.ast = ast
         self.do_more = False
         self.walker  = walker
@@ -58,8 +63,13 @@ class WenceCompilerPass1(object):
     def compile(self):
         while True:
             self.do_more = False
-            self.walker.walk(self.ast, self.handlers)
-            self.walker.walk(self.ast['blocks'], self.handlers)
+            self.walker.walk(self.ast, self.handlers1)
+            self.walker.walk(self.ast['blocks'], self.handlers1)
             if not self.do_more:
                 break
-        
+        while True:
+            self.do_more = False
+            self.walker.walk(self.ast, self.handlers1)
+            self.walker.walk(self.ast['blocks'], self.handlers1)
+            if not self.do_more:
+                break

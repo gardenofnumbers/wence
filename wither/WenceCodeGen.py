@@ -27,13 +27,9 @@ class WenceCodeGen():
         for (idx, child) in children:
             self.walk(child, depth+1)
         
-        #struct string
-        #TODO XXX FIXME val stuff is so scuffed
-        val = [node[x] for x in node if type(node[x]) != dict and type(x) == int]
-        if len(val) > 1:
-            raise Exception("Damnit, hoping we wouldn't hit this. too many values on node")
-        val = val[0] if len(val) > 0 else "NULL";
-        if type(val) == int or val == "NULL":
+        
+        val = node['value'] if 'value' in node else "None";
+        if type(val) == int:
             val = f"""(uintptr_t){val}|~(-1ull >> 1)"""
         else:
             val = f"""(uintptr_t)\"{val}\""""

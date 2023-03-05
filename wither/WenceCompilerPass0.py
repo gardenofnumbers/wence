@@ -27,7 +27,7 @@ class WenceCompilerPass0(object):
             s += child[0]
         node.clear()
         node['id'] = 'STRING'
-        node[0] = s
+        node['value'] = s
         return False 
     @_called  
     def P0_Name(self, node, parent, idx):
@@ -41,7 +41,7 @@ class WenceCompilerPass0(object):
             s += child[0]
         node.clear()
         node['id'] = 'NAME'
-        node[0] = s
+        node['value'] = s
         return False
     @_called
     def P0_Integer(self, node, parent, idx):
@@ -64,7 +64,7 @@ class WenceCompilerPass0(object):
             s += child[0]
         node.clear()
         node['id'] = f'INT'
-        node[0] = int(s, base=mode)
+        node['value'] = int(s, base=mode)
         return False
     @_called
     def P0_Block(self,node, parent, idx):
@@ -73,7 +73,7 @@ class WenceCompilerPass0(object):
         self.ast["blocks"][self.eid] = node
         parent[idx] = {
             "id": "BLOCK_REF",
-            0: self.eid
+            'value': self.eid
         }
         self.eid += 1;
         return True
