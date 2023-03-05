@@ -1,5 +1,6 @@
 import json
 from .WenceCompilerPass0 import WenceCompilerPass0
+from .WenceCompilerPass1 import WenceCompilerPass1
 from .WenceCodeGen import WenceCodeGen
 DEBUG_WALKER = False
 
@@ -31,7 +32,9 @@ class WenceCompiler(object):
     def compile(self):
         p0 = WenceCompilerPass0(self.ast, self.walker);
         p0.compile()
-        p1 = WenceCodeGen(self.ast)
-        p1.generate();
-        print(self.walker.unimpl)
+        p1 = WenceCompilerPass1(self.ast, self.walker);
+        p1.compile()
+        p2 = WenceCodeGen(self.ast)
+        p2.generate();
+        
         

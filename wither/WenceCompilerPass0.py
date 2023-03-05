@@ -1,15 +1,16 @@
 import json
 from functools import wraps
 
-DEBUG_STRING = False
-DEBUG_NAME   = False
-DEBUG_INTEGER = False
+DEBUG_STRING = True
+DEBUG_NAME   = True
+DEBUG_INTEGER = True
 
 def _called(f):
     @wraps(f)
     def _impl(self, *method_args, **method_kwargs):
         self.do_more = True
         method_output = f(self, *method_args, **method_kwargs)
+        method_args[0]['p0'] = True
         return method_output
     return _impl
 
@@ -84,13 +85,7 @@ class WenceCompilerPass0(object):
         del parent[idx+1]
         node['id'] = "INVOKE"
         return True
-
-    @_called
-    def P0_equation(self, node, parent, idx):
-        return True
-
-
-
+    
     def __init__(self, ast, walker):
         self.handlers = {
             "string" : self.P0_String,
@@ -104,7 +99,9 @@ class WenceCompilerPass0(object):
         self.do_more = False
         self.walker = walker
         self.ast["blocks"] = {'id': "BLOCK_STORE"}
- 
+        self.ast["flowps"] = {'id': "FLOWP_STORE"}
+        self.ast["forkps"] = {'id': "FORKP_STORE"}
+
     def compile(self):
         while True:
             self.do_more = False

@@ -34,9 +34,9 @@ class WenceCodeGen():
             raise Exception("Damnit, hoping we wouldn't hit this. too many values on node")
         val = val[0] if len(val) > 0 else "NULL";
         if type(val) == int or val == "NULL":
-            val = f"""(uintptr_t){val}"""
+            val = f"""(uintptr_t){val}|~(-1ull >> 1)"""
         else:
-            val = f"""(uintptr_t)"{val}" """
+            val = f"""(uintptr_t)\"{val}\""""
         
         res = f"""const wence_node_t node_{node['nid']} = {{{node['id']}, {val}, {{{"".join([f"&node_{c['nid']}," for (i,c) in children])} NULL}}}};\n"""
         self.output += (res)
