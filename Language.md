@@ -165,9 +165,9 @@ Blocks can also access themselves via the special node `_`. This is useful for c
                  }
     }
 }
+```
 Note that `@{_}` is a nesseccary syntax for utilizing `_` as a this-accessor in the middle of a wire, as otherwise `-> _` would be interpreted as a yield.
 
-```
 #### yielding
 Blocks can yield a value by sinking to `_`:
 ```
