@@ -1,4 +1,4 @@
-Wence:  a Functional Programming Lannguage
+Wence:  a Dataflow Programming Lannguage
 
 Wither: a Declarative Language for parsing
 
@@ -6,7 +6,7 @@ WIP - Please begin by reading [Language.md](Language.md)
 
 usage: `python3.10 main.py wence.wi <source>`
 
-This runs the wither interpreter using the given grammer to produce a wence tree (also, phase 0 of compilation is performed, some trivial node folding and such)
+This runs the wither interpreter and wence compiler using the given grammer and wence source to produce a wence tree
 
 e.g. `euclid.we` produces
 
