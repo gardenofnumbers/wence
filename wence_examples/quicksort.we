@@ -1,31 +1,47 @@
-{
-    !{arr, lo, hi};
-    @{(lo - 1), lo, arr[hi]} -> ~{
-        #{i, j, v};
-        _ -> ?{
-            (j < (hi-1)):{ 
-                ?{ (arr[j] < v): {@{arr, (i+1), j} -> ~swap; } }; 
-                 @{(i+1), (j+1), v} -> ~%;
-            }
+#{stdlib} -> ~{
+    
+    #{swap} -> {
+        !{arr, lo, hi};
+        @{(lo - 1), lo, arr[hi]} -> ~{
+            !{i, j, v};
+            _ -> ?{
+              (j <= hi) : { ?{
+                (arr[j] < v) : {
+                  @{arr, (i+1), j} -> ~swap; 
+                  @{(i+1), (j+1), v} -> ~%;     
+              }, (1): { @{i, (j+1), v} -> ~%; }
+              
+              }},(1): {
+                @{arr, (i+1), hi} -> ~swap;
+                (i+1) -> _;
+              }}
         };
-    };
-    @{arr, (i+1), hi} -> ~swap;
-    (i+a) -> _;
-}-> partition;
-{
-    !{arr, lo, hi};
-    % -> ~partition ->{
-        @{arr,lo,(%-1)} -> ~quicksort;
-        @{arr,(%+1),hi} -> ~quicksort;
-    };
-} -> quicksort;
-{
-    !{arr, i, j};
-    @{arr[i], arr[j]}
-    -> ~{
-        #{arri, arrj}; 
-        arrr->arr[i]; 
-        arri->arr[j];
-    };
-} -> swap;
-@{[13, 28, 85, 84, 64, 99, 40, 11, 27, 32], 0, 9} -> ~quicksort;
+    } -> #{partition};
+
+    #{partition} -> {
+        !{arr, lo, hi};
+        ?{
+            (((lo >= hi) || (lo < 0))) : { arr -> _; },
+            (1) : { 
+                ~partition -> {
+                    @{arr,lo,(%-1)} -> ~_;
+                    @{arr,(%+1),hi} -> ~_;
+                };
+            }
+        }
+    } -> #{quicksort};
+    
+    {
+        !{arr, i, j};
+        @{arr[i], arr[j]} -> ~{
+            !{arri, arrj}; 
+            arrj->arr[i]; 
+            arri->arr[j];
+        };
+    } -> #{swap};
+    
+    #{quicksort} -> ~{
+        @{[13, 28, 85, 84, 64, 99, 40, 11, 27, 32], 0, 9} -> ~quicksort;
+    }
+}
+

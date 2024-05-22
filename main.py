@@ -16,7 +16,8 @@ with open(sys.argv[2], 'r') as f:
 tree = i.run(src)
 
 print("finished!?")
-
+print(json.dumps(tree))
+input();
 
 c = WenceCompiler(tree); 
 c.compile()

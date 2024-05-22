@@ -16,11 +16,11 @@ def _called(f):
 
 class WenceCompilerPass1(object):
     @_called
-    def P0_equation(self, node, parent, idx):
+    def P1_equation(self, node, parent, idx):
         return True
     
     @_called
-    def P0_flowpoint(self, node, parent, idx):
+    def P1_flowpoint(self, node, parent, idx):
         raise Exception("Code Left in for now, flowpoints must be calculated later (when loops can be constructed in the graph)")
         node['id'] = "FLOWPOINT"
         node['fid'] = self.fid
@@ -30,7 +30,7 @@ class WenceCompilerPass1(object):
     
     #statements must be processed after all p0 manipulation is done, or things bork.
     @_called
-    def P0_statement(self, node, parent, idx):
+    def P1_statement(self, node, parent, idx):
         #reorder statement 
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
         first = children[0]
@@ -45,12 +45,28 @@ class WenceCompilerPass1(object):
         
         return True
     
+    @_called
+    def P1_statementfix(self, node, parent, idx):
+        #reorder statement 
+        children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
+        first = children[0]
+        #when in doubt, perform fuckery
+        this = first[1]
+        for (x,c) in children[1:]:
+            this['next'] = c
+            this = c
+            del node[x]
+
+        parent[idx] = first[1]
+        
+        return True
+    
     def __init__(self, ast, walker):
         self.handlers1 = {
             #"flowpoint":self.P0_flowpoint,
-            "statement":self.P0_statement,
+            "statement":self.P1_statement,
         }
-        self.handlers1 = {
+        self.handlers2 = {
             #"flowpoint":self.P0_flowpoint,
             #"statement":self.P0_statement,
         }
@@ -69,7 +85,7 @@ class WenceCompilerPass1(object):
                 break
         while True:
             self.do_more = False
-            self.walker.walk(self.ast, self.handlers1)
-            self.walker.walk(self.ast['blocks'], self.handlers1)
+            self.walker.walk(self.ast, self.handlers2)
+            self.walker.walk(self.ast['blocks'], self.handlers2)
             if not self.do_more:
                 break
