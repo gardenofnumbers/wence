@@ -119,7 +119,7 @@ Blocks encapsulate their scope at declaration time (analogous to closures). This
 Naturally, this same language feature can be used for block dependencies (analagous to named functions)
 ```
 #{foo, bar} -> {
-    ~foo
+    ~foo;
     ~bar;
 } -> #{baz}
 
