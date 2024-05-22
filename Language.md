@@ -161,11 +161,30 @@ Blocks can yield a value by sinking to `_`:
     ~foo -> #{stdout};
 }
 ```
-This is explored in more detail in the next section
+Yielding is explored in more detail in the next section
+
+Note that `@{_}` is a nesseccary syntax for utilizing `_` as a this-accessor in the middle of a wire, as otherwise `-> _` would be interpreted as a yield.
+
+
 
 
 
 ### Yielding values from blocks
+As a block can have multiple dependant nodes, particularly valuized blocks or in the case of recursion, yielding a value can cause multiple wires to resume execution. Consider the following example:
+```
+@{0} -> ~{
+    !{i} -> @{_} -> !{r} -> ?{
+        (0) : { 1 -> ~r -> #{foo}; }
+        (1) : { 2 -> _; }
+    } -> #{bar};
+}
+```
+This simple state machine recurses on the outermost block. When it yields a value in the second condition, both original dependant of the block (bar) and the variable dependant (foo) will receive the value. This behavior means you do not need to "bubble up" values in recursive constructions. In fact, what we have been calling recursion is perhaps more accurately conceptualized as a loop.
+
+If a block does not yeild a value, it's dependants simply do not execute.
+
+
+
 
  
 ### Advanced scope manipulation
