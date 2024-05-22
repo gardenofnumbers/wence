@@ -230,7 +230,7 @@ Blocks can access names which are in scope for any wire parents, including when 
  Note this enables using blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies. Accessing a name which is not currently in scope is a runtime error.
 
 #### The lift operator for blocks
-The lift operator `^` can also be used on a block, concatenating the scope of the target block into the scope of the current block. This can be used to access variables as encapsulated on a block. Consider the following example of a "decorator" style instruction, which hooks the function `baz` if it is called by the target block. 
+The lift operator `^` can also be used on a block, concatenating the scope of the target block into the scope of the current block. This can be used to access variables as encapsulated on a block. Consider the following example of a "decorator" style instruction, which hooks `baz` if it is called by the target block. 
 
 ```
 #{stdlib} -> {
@@ -244,13 +244,13 @@ The lift operator `^` can also be used on a block, concatenating the scope of th
                 % -> ~wrapper -> ~tgt;
             } -> !{baz} -> ^args -> ~block;
         } -> _;
-    } -> #{wrap};
+    } -> #{wrap_baz};
 
     {
         (%+1)->_;
     } -> #{wrapper};
                 
-    #{foo, wrap, wrapper} -> @{foo, wrapper} -> ~wrap -> #{wrapped};
+    #{foo, wrap_baz, wrapper} -> @{foo, wrapper} -> ~wrap_baz -> #{wrapped};
 
     #{foo, wrapped} -> ~{
         1 -> ~foo -> #{stdout};
