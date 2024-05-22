@@ -96,12 +96,13 @@ The "unglom" node can be used to assign labels into the current scope from the w
 ```
 @{1,2} -> !{foo, bar} -> ...
 ```
-The current wire state can be written into the wire by using a glom node and restored using the lift operator `^` 
+The current wire context (scope and value array) can be written into the wire by using a glom node and restored using the lift operator `^` 
 ```
 @{1,2,3} -> { 
     @{%} -> !{args} -> ... -> ^args -> //wire value is now [1,2,3]
 }
 ```
+This is explored in more detail later in the document. 
 
 Forkpoints are a syntax sugar which simplifies sending the wire value to multiple children, e.g.
 ```
@@ -153,6 +154,7 @@ Naturally, this same language feature can be used for block dependencies (analag
     ~baz;
 }
 ```
+
 Unglom can be used to implement block arguments
 
 ```
@@ -211,8 +213,8 @@ A block can yeild values multiple times. Consider this more contrived version of
 
 
  
-#### Advanced scope manipulation
-Blocks can access names which are in scope for any wire parents, including when being invoked after being passed elsewhere. This allows the invoker to override names which will then be accessed by the invokee.
+#### Advanced scope considerations
+Wence can be thought of as having two scopes, the encapsulated scope of the current block, and the ongoing wire scope of the execution. Wire scope is checked before encapsulated scope, allowing the invoker to override names which will then be accessed by the invokee. 
 ```
 #{stdlib} -> {
     @{1} -> ~{ !{bar} ->
@@ -227,11 +229,18 @@ Blocks can access names which are in scope for any wire parents, including when 
    };
 }
 ```
- Note this enables using blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies. Accessing a name which is not currently in scope is a runtime error.
+ Note this enables using blocks which access variables that do not exist in their encapsulated scope, so long as all invokers wrap them with all neccessary dependancies. Accessing a name which is not currently in scope is a runtime error.
+
+
 
 #### The lift operator for blocks
-The lift operator `^` can also be used on a block, concatenating the scope of the target block into the scope of the current block. This can be used to access variables as encapsulated on a block. Consider the following example of a "decorator" style construction, which hooks `baz` if it is called by the target block. 
+The lift operator `^` can be used on a block or stored wire context, concatenating the scope of the target into the wire scope. This can be used to access variables as encapsulated on a block, or to save and restore scope for more complex constructions. 
 
+When lifting a block, no change is made to the wire value.
+When lifting a stored wire context, the wire value is replaced completely.
+In both cases, the stored scope is concatenated to the wire scope, adding any new names and overriding existing ones.
+
+Consider the following example of a "decorator" style construction, which wraps `baz` if it is called by the target block. 
 ```
 #{stdlib} -> {
     {(%) -> _;} -> !{baz} -> ~{
