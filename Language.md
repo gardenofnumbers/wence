@@ -109,7 +109,8 @@ a ->
 `a` is sent to `b,c,f`, `c` is sent to `d,e` 
 
 ### A more detailed study of blocks
-Blocks are near equal in importance to the wire operator in providing expressivity to wence. Blocks are first class objects, and can either be invoked inline (executing immediately when all dependancies become available) or passed along the wire to subsequent nodes as a value. Invoking a block uses the `~` character.
+#### the basics
+Blocks are near equal in importance to the wire operator in providing expressivity to wence. Blocks are first class objects, and can either be invoked inline (executing immediately when all dependancies become available) or passed along the wire to subsequent nodes as a value. Invoking a block uses the `~` character. 
 
 ```
 ... -> { /* do stuff */ } -> #{foo}
@@ -164,23 +165,16 @@ Blocks can also access themselves via the special node `_`. This is useful for c
                  }
     }
 }
-```
+Note that `@{_}` is a nesseccary syntax for utilizing `_` as a this-accessor in the middle of a wire, as otherwise `-> _` would be interpreted as a yield.
 
+```
+#### yielding
 Blocks can yield a value by sinking to `_`:
 ```
 { 1 -> _; } -> !{foo} -> ~{
     ~foo -> #{stdout};
 }
 ```
-Yielding is explored in more detail in the next section
-
-Note that `@{_}` is a nesseccary syntax for utilizing `_` as a this-accessor in the middle of a wire, as otherwise `-> _` would be interpreted as a yield.
-
-
-
-
-
-### Yielding values from blocks
 As a block can have multiple dependant nodes, particularly valuized blocks or in the case of recursion, yielding a value can cause multiple wires to resume execution. Consider the following example:
 ```
 @{0} -> ~{
@@ -208,11 +202,10 @@ A block can yeild values multiple times. Consider this more contrived version of
     } -> _;
 } -> #{stdout}
 ```
-Note that an additional sink could be added after the `~r` to utilize both of these principles at once.
 
 
  
-### Advanced scope manipulation
+#### Advanced scope manipulation
 Writing to a variable containing a block allows for overriding / extending the scope encapsulated by that block. The variable itself is not modified, and the concatenated block object is forwarded on the wire. Note this allows for the creation of blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies.
 ```
 #{stdlib} -> {
@@ -229,8 +222,12 @@ Writing to a variable containing a block allows for overriding / extending the s
 }
 ```
 
+### Summary
+Yielding and scope manipulation provide enable rich metaprogramming-esque constructions. For example, multiple yields can be used to construct a generator-esque block, as we did above. Scope overriding can be used to manipulate code flow by replacing blocks used by an invokee. Wence currently lacks a mechanism to "lift" scope from a block instance, for example in order to enable decorator style block wrapping, but one will likely be added soon. 
 
+Exploring these constructions, and the algorithmic space carved out by wence's unusual design, is the ultimate purpose of this project. Wence is a "toy" language in the purest sense of the term. It is meant to delight and enlighten, to bewilder, not in the hostile way of a traditional esolang, but as a puzzle. 
 
+If wence interests you, please contact me on discord @numbers ! I get alot of bot friend requests, so please send a message request mentioning this project!
 
 
 
