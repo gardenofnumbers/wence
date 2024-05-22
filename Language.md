@@ -143,8 +143,10 @@ Unglom can be used to implement block arguments
 } -> ... 
 ```
 
-Blocks can also access themselves via the special node `_`. This is useful for certain recursive constructions. Writing to `_` is equivilent to "returning" a value (passing it along the wire to any dependants of the block). Writing to `_` multiple times within a block is currently a compile-time error.
-TODO: Consider/implement multi-output from blocks
+Blocks can also access themselves via the special node `_`. This is useful for certain recursive constructions. 
+
+Writing to `_` is equivilent to "returning" a value (passing it along the wire to any dependants of the block). This is explored further in the "advanced scope details" section.
+
  
 ### Advanced scope details
 Writing to a variable containing a block allows for overriding / extending the scope encapsulated by that block. The variable itself is not modified, and the concatenated block object is forwarded on the wire. Note this allows for the creation of blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies.
@@ -162,6 +164,7 @@ Writing to a variable containing a block allows for overriding / extending the s
    };
 }
 ```
+TODO: Nuance of `-> _`
 
 ### Forkpoints
 Forkpoints are a syntax sugar which simplifies sending the wire value to multiple children, e.g.
