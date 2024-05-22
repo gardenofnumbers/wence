@@ -183,7 +183,21 @@ This simple state machine recurses on the outermost block. When it yields a valu
 
 If a block does not yeild a value, it's dependants simply do not execute.
 
-
+A block can yeild values multiple times. Consider this more contrived version of the "loop from 1 to 10" example from earlier:
+```
+@{0} -> ~{
+    !{i} -> @{_} -> !{r} -> ?{
+        (i<10) : {
+            (i+1) -> |-> ~r
+                     |-> _; 
+        },
+        (1)    : {
+            i -> _;
+        }
+    } -> _;
+} -> #{stdout}
+```
+Note that an additional sink could be added after the `~r` to utilize both of these principles at once.
 
 
  
