@@ -30,7 +30,7 @@
         - TODO
 
     IO: 
-        - v1: just read / write from #{out}
+        - v1: just read #{in} / write from #{out}
     
     
 */
@@ -44,6 +44,9 @@ void walk(const wence_node_t * node, int depth) {
         walk(node->children[i], depth+1);
     }
 }
+
+
+struct 
 
 void interpret() {
     

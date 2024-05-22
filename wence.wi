@@ -1,4 +1,4 @@
-["base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "arguments", "flowpoint", "forkpoint", "file", "glob","invoke"]
+["base10", "base16", "this", "sysc", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "unglom", "flowpoint", "forkpoint", "file", "glob","invoke"]
 [";", "{", "}", "(", ")", "[", "]", ",", "!{", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x", "_", "|"]
 
 printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
@@ -18,17 +18,17 @@ array       := "[" *{ expression "," } ?( expression ) "]"
 name        := letter ?( *{ letter | digit } ) 
 subscript   := "[" ?( expression ) "]"
 equation    := "(" expression ?( operator expression ) ")"
-arguments   := "!{" *{ name "," } ?( name ) "}"
 flowpoint   := "#{" *{ name "," } ?( name ) "}"
 glom        := "@{" *{ expression "," } ?( expression ) "}"
+unglom      := "!{" *{ name "," } ?( name ) "}"
 node        := flowpoint | expression | forkpoint
 statement   := ?( node ) ?( *{ "->" node } ) ?( "->" node ) 
 forkpoint   := "|" "->" statement  ?( *{ "|" "->" statement } ) ";"
-block       := "{" ?( arguments ) *{ statement ";" } ?( statement ) "}"
+block       := "{" *{ statement ";" } ?( statement ) "}"
 twople      := expression ":" expression
 dict        := "${" *{ twople "," } ?( twople ) "}"
 filter      := "?{" *{ twople "," } ?( twople ) "}"
-exprvalue   := block | filter | dict | glom | equation | subbable ?( *{ subscript } ) | integer | this | sysc | glob
+exprvalue   := block | filter | dict | glom | unglom | equation | subbable ?( *{ subscript } ) | integer | this | sysc | glob
 expression  := ?( invoke ) exprvalue
 subbable    := name | array | string
 file        := *{ statement ";" } ?( statement )

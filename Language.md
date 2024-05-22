@@ -85,12 +85,17 @@ In this example, `b` is written to `a` and a new value for `b` is computed and w
 ```
 This statement provides static input to `a` and `b` in order to provide starting conditions for execution. A more 'useful' program might retrieve these values from stdin.
 
-### Nuances of the dataflow system
+### More dataflow details
 When all dependencies of a given flowpoint become available, that flowpoint and it's children are added to the execution queue. Each dependency chain will be executed once, after which the flowpoint state is reset. 
 
 TODO: design decision, how should multiple desynchronized writes be handled to nontrivial dependencies (e.g. depend on `a,b` and write to `a` twice before `b`)
 
 The wire value can be directly accessed using the special node `%`. 
+
+The "unglom" node can be used to assign labels into the current scope from the wire value.
+```
+@{1,2} -> !{foo, bar} -> ...
+```
 
 ### A more detailed study of blocks
 Blocks are near equal in importance to the wire operator in providing expressivity to wence. Blocks are first class objects, and can either be invoked inline (executing immediately when all dependancies become available) or passed along the wire to subsequent nodes as a value. Invoking a block uses the `~` character.
@@ -130,16 +135,13 @@ Naturally, this same language feature can be used for block dependencies (analag
     ~baz;
 }
 ```
-Special syntax is avaialable for accessing the wire input in a block (analogous to declaring function arguments). Labels declared in this way are available in all contained scope 
+Unglom can be used to implement block arguments
 
-(TODO: can labels be overriden by child scope? I dont see why not)
 ```
 ... -> {
-    !{argA, argB, ...}
-    /* do stuff */
+    !{argA, argB, ...} -> /* do stuff */
 } -> ... 
 ```
-TODO: Design decision, how should a mismatch between the wire input and argument count declared by a block be handled? for now, any mismatch is a runtime error
 
 Blocks can also access themselves via the special node `_`. This is useful for certain recursive constructions. Writing to `_` is equivilent to "returning" a value (passing it along the wire to any dependants of the block). Writing to `_` multiple times within a block is currently a compile-time error.
 TODO: Consider/implement multi-output from blocks

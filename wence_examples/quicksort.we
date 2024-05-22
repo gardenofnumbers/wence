@@ -1,42 +1,36 @@
 #{stdlib} -> ~{
-    
     #{swap} -> {
-        !{arr, lo, hi};
-        @{(lo - 1), lo, arr[hi]} -> ~{
-            !{i, j, v};
-            _ -> ?{
-              (j <= hi) : { ?{
-                (arr[j] < v) : {
-                  @{arr, (i+1), j} -> ~swap; 
-                  @{(i+1), (j+1), v} -> ~%;     
-              }, (1): { @{i, (j+1), v} -> ~%; }
-              
-              }},(1): {
-                @{arr, (i+1), hi} -> ~swap;
-                (i+1) -> _;
-              }}
+        !{arr, lo, hi} -> @{(lo - 1), lo, arr[hi]} -> ~{
+            !{i, j, v} -> @{_} -> !{r} -> ?{
+                (j <= hi) : { ?{
+                    (arr[j] < v) : {
+                    @{arr, (i+1), j} -> ~swap; 
+                    @{(i+1), (j+1), v} -> ~r;     
+                }, (1): { @{i, (j+1), v} -> ~r; }
+                
+                }},(1): {
+                    @{arr, (i+1), hi} -> ~swap;
+                    (i+1) -> _;
+                }} 
+        
         };
     } -> #{partition};
-
     #{partition} -> {
-        !{arr, lo, hi};
-        ?{
+        !{arr, lo, hi} -> @{_} -> !{r} -> ?{
             (((lo >= hi) || (lo < 0))) : { arr -> _; },
             (1) : { 
-                ~partition -> {
-                    @{arr,lo,(%-1)} -> ~_;
-                    @{arr,(%+1),hi} -> ~_;
+                @{arr, lo, hi} -> ~partition -> {
+                    @{arr,lo,(%-1)} -> ~r;
+                    @{arr,(%+1),hi} -> ~r;
                 };
             }
-        }
+        };
     } -> #{quicksort};
     
     {
-        !{arr, i, j};
-        @{arr[i], arr[j]} -> ~{
-            !{arri, arrj}; 
-            arrj->arr[i]; 
-            arri->arr[j];
+        !{arr, i, j} -> @{arr[i], arr[j]} -> !{vi, vj} -> ~{
+            vi -> arr[i]; 
+            vj -> arr[j];
         };
     } -> #{swap};
     

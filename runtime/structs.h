@@ -7,6 +7,9 @@ typedef struct wence_node {
     uintptr_t value;
     const struct wence_node * children[];
 }wence_node_t;
+
+
+
 const wence_node_t node_2 = {BLOCK_REF, (uintptr_t)0, { NULL}};
 const wence_node_t node_3 = {NAME, (uintptr_t)"main"|~(-1ull >> 1), { NULL}};
 const wence_node_t node_1 = {statement, (uintptr_t)NULL, {&node_2,&node_3, NULL}};
