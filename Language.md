@@ -144,10 +144,6 @@ TODO: Design decision, how should a mismatch between the wire input and argument
 Blocks can also access themselves via the special node `_`. This is useful for certain recursive constructions. Writing to `_` is equivilent to "returning" a value (passing it along the wire to any dependants of the block). Writing to `_` multiple times within a block is currently a compile-time error.
 TODO: Consider/implement multi-output from blocks
  
-
-
-Writing to a variable containing a block allows for overiding / extending the scope encapsulated on that block.
-
 ### Advanced scope details
 Writing to a variable containing a block allows for overriding / extending the scope encapsulated by that block. The variable itself is not modified, and the concatenated block object is forwarded on the wire. Note this allows for the creation of blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies.
 ```
