@@ -242,7 +242,7 @@ The lift operator `^` can also be used on a block, concatenating the scope of th
         !{block, wrapper} -> ~{ ^block -> @{baz} -> _ } -> !{tgt} -> {
             @{%} -> !{args} -> {
                 % -> ~wrapper -> ~tgt -> _;
-            } -> !{baz} -> ^args -> ~block;
+            } -> !{baz} -> ^args -> ~block -> _;
         } -> _;
     } -> #{wrap};
 
