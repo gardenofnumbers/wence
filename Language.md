@@ -97,6 +97,17 @@ The "unglom" node can be used to assign labels into the current scope from the w
 @{1,2} -> !{foo, bar} -> ...
 ```
 
+Forkpoints are a syntax sugar which simplifies sending the wire value to multiple children, e.g.
+```
+a ->
+    |-> b
+    |-> c -> 
+        |-> d
+        |-> e;  
+    |-> f;
+```
+`a` is sent to `b,c,f`, `c` is sent to `d,e` 
+
 ### A more detailed study of blocks
 Blocks are near equal in importance to the wire operator in providing expressivity to wence. Blocks are first class objects, and can either be invoked inline (executing immediately when all dependancies become available) or passed along the wire to subsequent nodes as a value. Invoking a block uses the `~` character.
 
@@ -222,21 +233,11 @@ Writing to a variable containing a block allows for overriding / extending the s
 
 
 
-### Forkpoints
-Forkpoints are a syntax sugar which simplifies sending the wire value to multiple children, e.g.
-```
-a ->
-    |-> b
-    |-> c -> 
-        |-> d
-        |-> e;  
-    |-> f;
-```
-`a` is sent to `b,c,f`, `c` is sent to `d,e` 
+
 ### Misc 
 
 TODO document:
-Forkpoints (syntax sugar for dependancies)
+
 Data types: Int, String, Array, Dictionary
 
 
