@@ -96,6 +96,12 @@ The "unglom" node can be used to assign labels into the current scope from the w
 ```
 @{1,2} -> !{foo, bar} -> ...
 ```
+The current wire state can be written into the wire by using a glom node and restored using the lift operator `^` 
+```
+@{1,2,3} -> { 
+    @{%} -> !{args} -> ... -> ^args -> //wire value is now [1,2,3]
+}
+```
 
 Forkpoints are a syntax sugar which simplifies sending the wire value to multiple children, e.g.
 ```
@@ -206,7 +212,7 @@ A block can yeild values multiple times. Consider this more contrived version of
 
  
 #### Advanced scope manipulation
-Writing to a variable containing a block allows for overriding / extending the scope encapsulated by that block. The variable itself is not modified, and the concatenated block object is forwarded on the wire. Note this allows for the creation of blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies.
+Blocks can access names which are in scope for any wire parents, including when being invoked after being passed elsewhere. This allows the invoker to override names which will then be accessed by the invokee.
 ```
 #{stdlib} -> {
     @{1} -> ~{ !{bar} ->
@@ -217,15 +223,47 @@ Writing to a variable containing a block allows for overriding / extending the s
 
     #{foo} -> ~{
         ~foo; //prints 1
-        @{2} -> !{bar} -> foo -> ~%; //prints 2
+        @{2} -> !{bar} -> ~foo; //prints 2
    };
 }
 ```
+ Note this enables using blocks which access variables that do not exist in scope at declaration time, so long as all invokers wrap them with all neccessary dependancies. Accessing a name which is not currently in scope is a runtime error.
 
-### Summary
-Yielding and scope manipulation provide enable rich metaprogramming-esque constructions. For example, multiple yields can be used to construct a generator-esque block, as we did above. Scope overriding can be used to manipulate code flow by replacing blocks used by an invokee. Wence currently lacks a mechanism to "lift" scope from a block instance, for example in order to enable decorator style block wrapping, but one will likely be added soon. 
+#### The lift operator for blocks
+The lift operator `^` can also be used on a block, concatenating the scope of the target block into the scope of the current block. This can be used to access variables as encapsulated on a block. Consider the following example of a "decorator" style instruction, which hooks the function `baz` if it is called by the target block. 
 
-Exploring these constructions, and the algorithmic space carved out by wence's unusual design, is the ultimate purpose of this project. Wence is a "toy" language in the purest sense of the term. It is meant to delight and enlighten, to bewilder, not in the hostile way of a traditional esolang, but as a puzzle. 
+```
+#{stdlib} -> {
+    {(%) -> _;} -> !{baz} -> ~{
+        { % -> ~baz -> _ } -> _;
+    } -> #{foo};
+
+    {
+        !{block, wrapper} -> ^block -> @{baz} -> !{tgt} -> {
+            @{%} -> !{args} -> {
+                % -> ~wrapper -> ~tgt;
+            } -> !{baz} -> ^args -> ~block;
+        } -> _;
+    } -> #{wrap};
+
+    {
+        (%+1)->_;
+    } -> #{wrapper};
+                
+    #{foo, wrap, wrapper} -> @{foo, wrapper} -> ~wrap -> #{wrapped};
+
+    #{foo, wrapped} -> ~{
+        1 -> ~foo -> #{stdout};
+        1 -> ~wrapped -> #{stdout};
+    }
+}
+```
+
+
+
+### Closing Remarks
+
+Exploring the algorithmic space carved out by wence's unusual design is the ultimate purpose of this project. Wence is a "toy" language in the purest sense of the term. It is meant to delight and enlighten, to bewilder, not in the hostile way of a traditional esolang, but as a puzzle. 
 
 If wence interests you, please contact me on discord @numbers ! I get alot of bot friend requests, so please send a message request mentioning this project!
 

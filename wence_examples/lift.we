@@ -1,0 +1,24 @@
+#{stdlib} -> {
+    {(%) -> _;} -> !{baz} -> ~{
+        { % -> ~baz -> _ } -> _;
+    } -> #{foo};
+
+    {
+        !{block, wrapper} -> ^block -> @{baz} -> !{tgt} -> {
+            @{%} -> !{args} -> {
+                % -> ~wrapper -> ~tgt;
+            } -> !{baz} -> ^args -> ~block;
+        } -> _;
+    } -> #{wrap};
+
+    {
+        (%+1)->_;
+    } -> #{wrapper};
+                
+    #{foo, wrap, wrapper} -> @{foo, wrapper} -> ~wrap -> #{wrapped};
+
+    #{foo, wrapped} -> ~{
+        1 -> ~foo -> #{stdout};
+        1 -> ~wrapped -> #{stdout};
+    }
+}
