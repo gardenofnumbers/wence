@@ -6,7 +6,7 @@
     {
         !{block, wrapper} -> ^block -> @{baz} -> !{tgt} -> {
             @{%} -> !{args} -> {
-                % -> ~wrapper -> ~tgt;
+                % -> ~wrapper -> ~tgt -> _;
             } -> !{baz} -> ^args -> ~block;
         } -> _;
     } -> #{wrap};
