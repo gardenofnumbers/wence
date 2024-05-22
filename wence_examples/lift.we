@@ -4,7 +4,7 @@
     } -> #{foo};
 
     {
-        !{block, wrapper} -> ^block -> @{baz} -> !{tgt} -> {
+        !{block, wrapper} -> ~{ ^block -> @{baz} -> _ } -> !{tgt} -> {
             @{%} -> !{args} -> {
                 % -> ~wrapper -> ~tgt -> _;
             } -> !{baz} -> ^args -> ~block;
