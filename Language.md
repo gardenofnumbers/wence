@@ -233,7 +233,7 @@ Wence can be thought of as having two scopes, the encapsulated scope of the curr
 
 
 
-#### The lift operator for blocks
+#### The lift operator and scopes
 The lift operator `^` can be used on a block or stored wire context, concatenating the scope of the target into the wire scope. This can be used to access variables as encapsulated on a block, or to save and restore scope for more complex constructions. 
 
 When lifting a block, no change is made to the wire value.
