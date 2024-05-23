@@ -3,7 +3,7 @@
 ```
 ### Hello World
 
-Wence is an experimental dataflow oriented programming language currently in the early prototyping stage, developed as a toy and learning project by numbers. Wence is syntactically flexible by design, often allowing multiple equivilent expressions of the same semantics, and also allowing for certain semantically useless constructions. This design decision is intended to enable a motivated programmer to elegantly express complex programs, while simplifying the parser and compiler.
+Wence is an experimental dataflow oriented programming language currently in the early prototyping stage, developed as a toy and learning project by numbers.
 
 This document is intended to provide both a first-look onboarding to the syntax and semantics of Wence, as well as to provide a snapshot of design principles for the language. For additional details about language implementation, and for information on wence's grammar DSL ("Wither"), see other docs (pending).  
 
