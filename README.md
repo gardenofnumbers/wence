@@ -10,7 +10,7 @@ This runs the wither interpreter and wence compiler using the given grammer and 
 
 e.g. `euclid.we` produces
 
-![this graph](images/euclid.png)
+![this graph](images/euclid.svg)
 
 Known issues:
 No syntax error handling means if you make a typo the output graph will usually just be empty
