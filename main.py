@@ -3,8 +3,9 @@ from wither import witherParser, WitherInterpreter, WenceCompiler
 import json
 import sys
 
+DEBUG_WITHER = True
 if len(sys.argv) < 3:
-    print(f"Proper usage: {sys.argv[0]} <wither machine> <source>")
+    print(f"Proper usage: {sys.argv[0]} <wither machine> <source> <?dot output file>")
     exit(0);
 
 with open(sys.argv[1], 'r') as f:
@@ -13,14 +14,21 @@ with open(sys.argv[1], 'r') as f:
 with open(sys.argv[2], 'r') as f:
     src = f.read();
 
+
+
 tree = i.run(src)
 
-print("finished!?")
-print(json.dumps(tree))
-input();
+if DEBUG_WITHER:
+    print(json.dumps(tree))
+    input();
 
-c = WenceCompiler(tree); 
-c.compile()
+dot, blocks = WenceCompiler(tree).compile(); 
+
+
 print()
 print()
-print(json.dumps(tree))
+print(json.dumps(blocks))
+with open("test.dot", "w") as f:
+    f.write(dot)
+
+

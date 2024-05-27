@@ -4,3 +4,4 @@ __pycache__/*
 wence_examples/uhh.we
 wence_examples/dependancy.we
 *.svg
+test.dot

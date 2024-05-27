@@ -1,14 +1,60 @@
 import json
 from functools import wraps
 DEBUG_WALKER = False
+DEBUG_DOT = False
+"""
+    First effort at dot based frontend. Transforms the dict tree into a node based cyclic digraph, and emits DOT.
+"""
 
-class WenceCodeGen():
-    def __init__(self, ast):
+class WenceNode(object):
+    def __init__(self, node):
+        self.id = node['id']; 
+        self.nid = node['nid'];
+        if "value" in node:
+            self.value = node['value'];
+        else:
+            self.value = None
+
+        self.data = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x != 69]
+        self.flow = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x == 69]
+        if DEBUG_DOT:
+            print(f"{self.id} {self.nid} {self.data} -> {self.flow}")
+       
+
+    def emit(self, blockmap):
+        label   = f"id={self.id}\nnid={self.nid}"
+        if self.value is not None:
+            label += f"\nvalue= '{self.value}'"
+
+        node = f'n{self.nid} [label="{label}"]\n'
+        
+
+        #build value pairs for node:
+        edges = ""
+        #build output edges
+        for d in self.flow:
+            edges += f'n{self.nid} -> n{d} [label=flow]\n'
+        #build data edges
+        for d in self.data:
+            edges += f'n{self.nid} -> n{d} [label=data]\n'
+        
+        #handle block flow:
+        if self.id == 'BLOCK_REF':
+            edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block]"
+
+        return node + edges
+    
+class WenceDotGen():
+
+    def __init__(self, blocks):
         self.trace = ""
-        self.ast = ast
+        self.blocks = blocks
         self.nid = 0
         self.types = set()
         self.output = ""
+        self.blockmap = {} 
+        self.node_list = []
+
 
     def walk(self, node, depth = 0):
         #set node nid first
@@ -26,40 +72,26 @@ class WenceCodeGen():
         self.trace += f" {node['id']}"
         for (idx, child) in children:
             self.walk(child, depth+1)
+
+        self.node_list.append(WenceNode(node))
         
-        
-        val = node['value'] if 'value' in node else "None";
-        if type(val) == int:
-            val = f"""(uintptr_t){val}|~(-1ull >> 1)"""
-        else:
-            val = f"""(uintptr_t)\"{val}\""""
-        
-        res = f"""const wence_node_t node_{node['nid']} = {{{node['id']}, {val}, {{{"".join([f"&node_{c['nid']}," for (i,c) in children])} NULL}}}};\n"""
-        self.output += (res)
+        """
+            Todo: Maybe refactor so that this block_id -> node id transformation doesn't need to happen. 
+                  Worried about confusion down the line with this sort of opaque juggling
+        """
+        if node['id'] == "BLOCK":
+            self.blockmap[node['block_id']] = node['nid']
+        if node['id'] == "BLOCK_REF":
+            pass #should BLOCK_REF:value should point at `block_id`, we build a translation map rather than manipulating here.
+
     def generate(self):
-        #process top level code
-        self.walk(self.ast);
-        #process blocks
-        #blocks = self.ast['blocks']
-        #for block in [blocks[x] for x in blocks if type(blocks[x]) == dict and type(x) == int]:
-        #    print(block)
-        #    self.walk(block)
-        self.walk(self.ast['blocks'])
-        self.output = f"""
-typedef enum WENCE_NODE_TYPE {{
-    {",".join(self.types)}
-}} WENCE_NODE_TYPE_t;
-
-typedef struct wence_node {{ 
-    WENCE_NODE_TYPE_t type;
-    uintptr_t value;
-    const struct wence_node * children[];
-}}wence_node_t;
-""" + self.output + f"""
-const wence_node_t *ast_head = &node_{self.ast['nid']};
-const wence_node_t *blocks   = &node_{self.ast['blocks']['nid']};
-""";
-
-        print(self.output)
+        for block in self.blocks:
+            self.walk(block);
+        z = "\n"
+        return f"""digraph G {{
+            {z.join([n.emit(self.blockmap) for n in self.node_list])}
+        }}
+        """
+    
         
         

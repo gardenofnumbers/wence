@@ -1,9 +1,18 @@
 import json
 from functools import wraps
+class SparseList(list):
+  def __setitem__(self, index, value):
+    missing = index - len(self) + 1
+    if missing > 0:
+      self.extend([None] * missing)
+    list.__setitem__(self, index, value)
+  def __getitem__(self, index):
+    try: return list.__getitem__(self, index)
+    except IndexError: return None
 
-DEBUG_STRING = True
-DEBUG_NAME   = True
-DEBUG_INTEGER = True
+DEBUG_STRING = False
+DEBUG_NAME   = False
+DEBUG_INTEGER = False
 
 def _called(f):
     @wraps(f)
@@ -68,14 +77,14 @@ class WenceCompilerPass0(object):
         return False
     @_called
     def P0_Block(self,node, parent, idx):
-        node['eid'] = self.eid
+        node['block_id'] = self.block_id
         node['id'] = 'BLOCK'
-        self.ast["blocks"][self.eid] = node
+        self.blocks[self.block_id] = node
         parent[idx] = {
             "id": "BLOCK_REF",
-            'value': self.eid
+            'value': self.block_id
         }
-        self.eid += 1;
+        self.block_id += 1;
         return True
     
 
@@ -86,6 +95,13 @@ class WenceCompilerPass0(object):
         node['id'] = "INVOKE"
         return True
     
+    @_called
+    def P0_Operator(self, node, parent, idx):
+        node['value'] = node[0]
+        node[0] = None;
+        node['id'] = "OPERATOR"
+        return True
+    
     def __init__(self, ast, walker):
         self.handlers = {
             "string" : self.P0_String,
@@ -93,19 +109,21 @@ class WenceCompilerPass0(object):
             "integer" : self.P0_Integer,
             "block": self.P0_Block,  
             "invoke":self.P0_Invoke,
+            "operator":self.P0_Operator,
+
         }
         self.ast = ast
-        self.eid = 0
+        self.block_id = 0
         self.do_more = False
         self.walker = walker
-        self.ast["blocks"] = {'id': "BLOCK_STORE"}
-        self.ast["flowps"] = {'id': "FLOWP_STORE"}
-        self.ast["forkps"] = {'id': "FORKP_STORE"}
-
+        self.blocks = SparseList([]) #{'id': "BLOCK_STORE"}
+        
     def compile(self):
         while True:
             self.do_more = False
             self.walker.walk(self.ast, self.handlers)
             if not self.do_more:
                 break
+        
+        return self.blocks
         
