@@ -20,7 +20,6 @@ tree = i.run(src)
 
 if DEBUG_WITHER:
     print(json.dumps(tree))
-    input();
 
 dot, blocks = WenceCompiler(tree).compile(); 
 
@@ -28,7 +27,12 @@ dot, blocks = WenceCompiler(tree).compile();
 print()
 print()
 print(json.dumps(blocks))
-with open("test.dot", "w") as f:
-    f.write(dot)
+
+if len(sys.argv) >= 4:
+    with open(sys.argv[3], "w") as f:
+        f.write(dot)
+else:
+    print(dot)
+
 
 
