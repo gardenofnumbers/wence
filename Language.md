@@ -231,6 +231,17 @@ Wence can be thought of as having two scopes, the encapsulated scope of the curr
 ```
  Note this enables using blocks which access variables that do not exist in their encapsulated scope, so long as all invokers wrap them with all neccessary dependancies. Accessing a name which is not currently in scope is a runtime error.
 
+Note that as side effect of Wence's scope flexibility an invoker may inadvertently override encapsulated values in an invokee. This can be avoided by careful consideration of namespace asignment, and certain compile-time and runtime debug helpers will eventually be provided to introspect this scenario.
+
+Blocks which may be invoked repeatedly can update their encapsulated scope. This "make counter" example takes an integer and returns a block. Invoking that block takes an integer and adds it to a running total, returning the new total. Separate invokations of make_counter return blocks that manage different running totals.
+```
+{
+   !{n} -> { !{i} -> @{(i+n)} -> !{n} -> _; } -> _;
+} -> make_counter
+
+
+```
+
 
 
 #### The lift operator and scopes
@@ -240,7 +251,7 @@ When lifting a block, no change is made to the wire value.
 When lifting a stored wire context, the wire value is replaced completely.
 In both cases, the stored scope is concatenated to the wire scope, adding any new names and overriding existing ones.
 
-Consider the following example of a "decorator" style construction, which wraps `baz` if it is called by the target block. 
+Consider the following example of a "decorator" style construction, which takes a block and returns a block which calls it, wrapping `baz` if it is called by the target block. 
 ```
 #{stdlib} -> {
     {(%) -> _;} -> !{baz} -> ~{
