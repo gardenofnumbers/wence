@@ -1,8 +1,9 @@
 import json
 
-DEBUG_INTERP = True
+DEBUG_INTERP = False
 DEBUG_PARSER = False
 DEBUG_STACK  = False
+DEBUG_INGEST = False
 class TerminationFound(Exception):
     pass
 class witherParser(object):
@@ -21,7 +22,8 @@ class witherParser(object):
         
     def ingestLine(self, line):
         words = list(filter(None, line.split(" ")))
-        print(f"Processing {len(words)} words of wither {words}")
+        if DEBUG_INGEST:
+            print(f"Processing {len(words)} words of wither {words}")
         s = words[0]
         if s in self.states:
             raise RuntimeError(f"Redeclaration of state {s}!")
