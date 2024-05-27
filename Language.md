@@ -295,7 +295,8 @@ TODO document:
 
 Data types: Int, String, Array, Dictionary
 
-
+#### Vague notes:
+Wence semantics are intented to be as generalized as possible. E.g., a node's semantic behavior should not care if it has some special structural positioning (e.g. at the beginning of a wire or block).
 
 
 

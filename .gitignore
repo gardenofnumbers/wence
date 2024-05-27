@@ -3,3 +3,4 @@ __pycache__/*
 *.elf
 wence_examples/uhh.we
 wence_examples/dependancy.we
+*.svg
