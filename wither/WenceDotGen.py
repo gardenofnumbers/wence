@@ -16,37 +16,50 @@ class WenceNode(object):
             self.value = node['value'];
         else:
             self.value = None
-
-        self.data = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x != 69]
-        self.flow = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x == 69]
+        
+        self.in_block = node['in_block'] if 'in_block' in node else None;
+        self.data = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
+        self.flow = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x == 9090]
         if DEBUG_DOT:
             print(f"{self.id} {self.nid} {self.data} -> {self.flow}")
        
 
     def emit(self, blockmap, flowmap):
-        label   = f"id={self.id}\nnid={self.nid}"
+        label   = f"{self.id}\nnid={self.nid}"
+        
+        #default, debug values (to be removed or used elsewhere)
         if self.value is not None:
             label += f"\nvalue= '{self.value}'"
+        #if self.in_block is not None:
+        #    label += f"\nin_block={self.in_block}"
 
-        node = f'n{self.nid} [label="{label}"]\n'
-        
+        #handle special nodes
+        match self.id:
+            case "BLOCK":
+                label += f"\nblock_id={self.node['block_id']}"
 
-        #build value pairs for node:
+        if self.in_block is None:
+            node = f'n{self.nid} [label="{label}"]\n'
+        else:
+            node = f'n{self.nid} [label="{label}" group=cluster{self.in_block}]\n'
+
         edges = ""
         #build output edges
         for d in self.flow:
             edges += f'n{self.nid} -> n{d} [label=flow color=green]\n'
-        #build data edges
+        #build data edges - these go away as compilation improves
         for d in self.data:
-            edges += f'n{self.nid} -> n{d} [label=data color=blue]\n'
+            edges += f'n{self.nid} -> n{d} [color=grey]\n'
         
-        #handle block flow:
-        if self.id == 'BLOCK_REF':
-            edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block color=purple]"
-        if self.id == "FLOWPOINT" and "flow_to" in self.node:
-            #import code; code.interact(local=locals());
-            flatten = lambda xss: [x for xs in xss for x in xs]
-            edges += "\n".join(flatten([ [f"n{self.nid} -> n{v} [label=flow{l} color=red]" for v in f] for (l,f) in [ (l, flowmap[l]) for l in self.value ] ]))
+        #handle special edges;
+        match self.id:
+            case 'BLOCK_REF':
+                edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block color=purple]"
+            case "FLOWPOINT":
+                if "flow_to" in self.node:
+                    #import code; code.interact(local=locals());
+                    flatten = lambda xss: [x for xs in xss for x in xs]
+                    edges += "\n".join(flatten([ [f'n{self.nid} -> n{v} [label="flow->{l}" color=red]' for v in f] for (l,f) in [ (l, flowmap[l]) for l in self.value ] ]))
         return node + edges
     
 class WenceDotGen():
@@ -61,7 +74,7 @@ class WenceDotGen():
         self.flowmap_f  = defaultdict(lambda: set())
         self.flowmap_t  = defaultdict(lambda: set())
         self.node_list = []
-
+        self.cur_block = None;
 
     def walk(self, node, depth = 0):
         #set node nid first
@@ -70,6 +83,24 @@ class WenceDotGen():
 
         #add our type to the list
         self.types.add(node['id'])
+
+        #process blocks and flowpoints
+        if self.cur_block is not None:
+            node['in_block'] = self.cur_block;
+        if node['id'] == "BLOCK":
+            self.blockmap[node['block_id']] = node['nid']
+            self.cur_block = node['block_id']
+            if DEBUG_WALKER:
+                print(f"processing block {self.cur_block}")
+        if node['id'] == "FLOWPOINT":
+            if DEBUG_WALKER:
+                print("Lift flowpoint node")
+                print(node)
+            if 'flow_from' in node:
+                for label in node['value']:
+                    if DEBUG_WALKER:
+                        print(f"add {label}->{node['nid']}")
+                    self.flowmap_f[label].add(node['nid'])
 
         #walk children
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
@@ -80,24 +111,15 @@ class WenceDotGen():
         for (idx, child) in children:
             self.walk(child, depth+1)
 
-        self.node_list.append(WenceNode(node))
+        
         
         """
             Todo: Maybe refactor so that this block_id -> node id transformation doesn't need to happen. 
                   Worried about confusion down the line with this sort of opaque juggling
         """
-        if node['id'] == "BLOCK":
-            self.blockmap[node['block_id']] = node['nid']
-        
-        if node['id'] == "FLOWPOINT":
-            print("Lift flowpoint node")
-            print(node)
-            if 'flow_from' in node:
-                for label in node['value']:
-                    print(f"add {label}->{node['nid']}")
-                    self.flowmap_f[label].add(node['nid'])
+
             
-            
+        self.node_list.append(WenceNode(node))
                 
     def generate(self):
         for block in self.blocks:

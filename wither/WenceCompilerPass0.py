@@ -19,7 +19,7 @@ def _called(f):
     def _impl(self, *method_args, **method_kwargs):
         self.do_more = True
         method_output = f(self, *method_args, **method_kwargs)
-        method_args[0]['p0'] = True
+        #method_args[0]['p0'] = True
         return method_output
     return _impl
 
