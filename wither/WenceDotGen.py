@@ -1,5 +1,6 @@
 import json
 from functools import wraps
+from collections import defaultdict 
 DEBUG_WALKER = False
 DEBUG_DOT = False
 """
@@ -8,6 +9,7 @@ DEBUG_DOT = False
 
 class WenceNode(object):
     def __init__(self, node):
+        self.node = node;
         self.id = node['id']; 
         self.nid = node['nid'];
         if "value" in node:
@@ -21,7 +23,7 @@ class WenceNode(object):
             print(f"{self.id} {self.nid} {self.data} -> {self.flow}")
        
 
-    def emit(self, blockmap):
+    def emit(self, blockmap, flowmap):
         label   = f"id={self.id}\nnid={self.nid}"
         if self.value is not None:
             label += f"\nvalue= '{self.value}'"
@@ -41,7 +43,10 @@ class WenceNode(object):
         #handle block flow:
         if self.id == 'BLOCK_REF':
             edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block]"
-
+        if self.id == "FLOWPOINT" and "flow_to" in self.node:
+            #import code; code.interact(local=locals());
+            flatten = lambda xss: [x for xs in xss for x in xs]
+            edges += "\n".join(flatten([ [f"n{self.nid} -> n{v} [label=flow{l} color=red]" for v in f] for (l,f) in [ (l, flowmap[l]) for l in self.value ] ]))
         return node + edges
     
 class WenceDotGen():
@@ -53,6 +58,8 @@ class WenceDotGen():
         self.types = set()
         self.output = ""
         self.blockmap = {} 
+        self.flowmap_f  = defaultdict(lambda: set())
+        self.flowmap_t  = defaultdict(lambda: set())
         self.node_list = []
 
 
@@ -81,15 +88,25 @@ class WenceDotGen():
         """
         if node['id'] == "BLOCK":
             self.blockmap[node['block_id']] = node['nid']
-        if node['id'] == "BLOCK_REF":
-            pass #should BLOCK_REF:value should point at `block_id`, we build a translation map rather than manipulating here.
-
+        
+        if node['id'] == "FLOWPOINT":
+            print("Lift flowpoint node")
+            print(node)
+            if 'flow_from' in node:
+                for label in node['value']:
+                    print(f"add {label}->{node['nid']}")
+                    self.flowmap_f[label].add(node['nid'])
+            
+            
+                
     def generate(self):
         for block in self.blocks:
             self.walk(block);
+        print(dict(self.flowmap_f))
+        print(dict(self.flowmap_t))
         z = "\n"
         return f"""digraph G {{
-            {z.join([n.emit(self.blockmap) for n in self.node_list])}
+            {z.join([n.emit(self.blockmap, self.flowmap_f) for n in self.node_list])}
         }}
         """
     

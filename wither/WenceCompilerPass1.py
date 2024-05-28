@@ -32,23 +32,46 @@ class WenceCompilerPass1(object):
         
         return True
     
-    
+    @_called
+    def P1_flowpoint(self, node, parent, idx):
+        children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 69]
+        node['value'] = []
+        node['flow_id'] = self.flow_id;
+        self.flow_id += 1;
+        for i,child in children:
+            if child['id'] != "NAME":
+                raise RuntimeError(f"Expected NAME and got {node[0]['id']} in P1 Flowpoint")
+            node['value'].append(child['value'])
+            del node[i]
+        node['id']="FLOWPOINT"
+        if 69 in parent and parent[69] is node:
+            print(f"Detected flow into flowpoint at {node['value']}")
+            node['flow_to'] = True
+        if 69 in node:
+            print(f"Detected flow from flowpoint at {node['value']}")
+            node['flow_from'] = True
+        return True
+
     def __init__(self, ast, blocks, walker):
-        self.handlers = {
-            "statement":self.P1_statement,
-        }
+        self.handlers = [
+            {"statement":self.P1_statement},
+            {"flowpoint":self.P1_flowpoint}
+            ]
         self.ast = ast
         self.blocks = blocks
         self.do_more = False
         self.walker  = walker
-        
+        self.flow_id = 0;
     def compile(self):
+        hidx = 0
         while True:
             self.do_more = False
-            self.walker.walk(self.ast, self.handlers)
+            self.walker.walk(self.ast, self.handlers[hidx])
             for block in self.blocks:
-                self.walker.walk(block, self.handlers)
+                self.walker.walk(block, self.handlers[hidx])
             if not self.do_more:
-                break
+                hidx += 1
+                if hidx == len(self.handlers):
+                    break;
         return self.blocks
 
