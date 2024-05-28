@@ -59,7 +59,7 @@ class WenceNode(object):
         edges = ""
         #build output edges
         for d in self.flow:
-            edges += f'n{self.nid} -> n{d} [label=flow color=green]\n'
+            edges += f'n{self.nid} -> n{d} [color=green]\n'
             self.subgraph.append(d)
 
         #build data edges - these can go away as compilation improves
@@ -69,7 +69,7 @@ class WenceNode(object):
         #handle special edges;
         match self.id:
             case 'BLOCK_REF':
-                edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block color=purple]\n"         
+                edges += f"n{self.nid} -> n{blockmap[self.value]} [color=purple]\n"         
                 
                 traverse  = lambda node: [x for xs in ([traverse (node[x]) for x in node if type(node[x]) == dict and type(x) == int] if 0 in node else [[node['nid']]]) for x in xs]    
                 for n in nodelist:
@@ -79,7 +79,7 @@ class WenceNode(object):
                         
             case "FLOWPOINT":
                 if "flow_to" in self.node:
-                    edges += "\n".join([x for xs in [ [f'n{self.nid} -> n{v} [label="flow->{l}" color=red]' for v in f] for (l,f) in [ (l, flowmap[l]) for l in self.value ]] for x in xs])
+                    edges += "\n".join([x for xs in [ [f'n{self.nid} -> n{v} [ color=red]' for v in f] for (l,f) in [ (l, flowmap[l]) for l in self.value ]] for x in xs])
                     
         return (self.nid, self.subgraph), node + edges
     
@@ -205,9 +205,9 @@ class WenceDotGen():
         def emit_groups(sgl):    
             for gid,sg in [(gid,sgl[gid]) for gid in sgl]:
                 if all(isinstance(_, int) for _ in sg):
-                    yield f'subgraph cluster{gid} {{ label={gid} n{gid};{";".join(map(lambda n: f"n{n}", sg))} }}\n'
+                    yield f'subgraph cluster{gid} {{  n{gid};{";".join(map(lambda n: f"n{n}", sg))} }}\n'
                 else:
-                    s = f'subgraph cluster{gid} {{ label={gid} n{gid}; {";".join([ f"n{_}" for _ in sg if isinstance(_, int) ])}\n'
+                    s = f'subgraph cluster{gid} {{  n{gid}; {";".join([ f"n{_}" for _ in sg if isinstance(_, int) ])}\n'
                     z = list(chain(*[emit_groups(_) for _ in sg if not isinstance(_, int) ]))
                     yield s;
                     for _ in z:
