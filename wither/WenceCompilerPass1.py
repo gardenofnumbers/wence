@@ -51,7 +51,7 @@ class WenceCompilerPass1(object):
         self.flow_id += 1;
         for i,child in children:
             if child['id'] != "NAME":
-                raise RuntimeError(f"Expected NAME and got {node[0]['id']} in P1 Flowpoint")
+                raise RuntimeError(f"Expected NAME and got {child['id']} in P1 Flowpoint")
             node['value'].append(child['value'])
             del node[i]
         node['id']="FLOWPOINT"
@@ -64,27 +64,75 @@ class WenceCompilerPass1(object):
                 print(f"Detected flow from flowpoint at {node['value']}")
             node['flow_from'] = True
         return True
+    
+
     """
         TODO: Maybe allow equations with only 1 child (e.g. (1) )
         TODO: Maybe rework equations generally tbh it's fairly legacy wither
     """
     @_called
     def P1_equation(self, node, parent, idx):
-        children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
-        operator    = children[1][1];
-        operator[0] = children[0][1];
-        operator[1] = children[2][1];
+        children = [node[x] for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
+        operator    = children[1];
+        operator[0] = children[0];
+        operator[1] = children[2];
         parent[idx] = operator;
         #CURSED CURSED CURSED CURSED
         del node
 
         return True
     
+    """
+        More sane passes from here
+    """
+
+    @_called
+    def P1_unglom(self, node, parent, idx):
+        children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
+        node['value'] = []
+        for i, child in children:
+            if child['id'] != 'NAME':
+                raise RuntimeError(f"Expected NAME and got {child['id']} in P1 unglom") 
+            node['value'].append(child['value'])
+            del node[i]
+        node['id'] = "UNGLOM"
+        return True
+
+
+    @_called
+    def P1_subscript(self, node, parent, idx):
+        child = node[0]
+        if child['id'] != "twople":
+            raise RuntimeError(f"Expected twople and got {child['id']} in P1 subscript") 
+        node[0] = child[0]
+        node[1] = child[1]
+        del child
+        node['id'] = 'SUBSCRIPT'
+        return True
+    
+    @_called
+    def P1_filter(self, node, parent, idx):
+        children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
+        for i,child in children:
+            if child['id'] != 'twople':
+                raise RuntimeError(f"Expected twople and got {child['id']} in P1 filter") 
+            pred  = child[0]
+            block = child[1] 
+            pred[9090] = block;
+            node[i] = pred;
+            del child  
+            node['id'] = 'FILTER'
+
+
+
     def __init__(self, ast, blocks, walker):
         self.handlers = [
             {"statement":self.P1_statement},
             {"flowpoint":self.P1_flowpoint},
             {"equation": self.P1_equation},
+            {"unglom": self.P1_unglom},
+            {"subscript":self.P1_subscript},
+            {"filter":self.P1_filter}
             ]
         self.ast = ast
         self.blocks = blocks

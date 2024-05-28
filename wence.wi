@@ -1,4 +1,4 @@
-["base10", "base16", "this", "lift", "string", "integer", "array", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "unglom", "flowpoint", "forkpoint", "file", "glob","invoke"]
+["base10", "base16", "this", "lift", "string", "integer", "list", "name", "subscript", "equation", "statement", "block", "twople", "dict", "filter", "glom", "unglom", "flowpoint", "forkpoint", "file", "glob","invoke"]
 [";", "{", "}", "(", ")", "[", "]", ",", "!{", "@{", "${", "?{", ",", ":", "->", "#{", "~", "%", "'", "0x", "_", "|"]
 
 printable   := "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~" 
@@ -14,9 +14,9 @@ string      := "'" ?( *{ printable } ) "'"
 base10      := digit ?( *{ digit } )
 base16      := "0x" *{ digit | hex }
 integer     := base16 | base10
-array       := "[" *{ expression "," } ?( expression ) "]"
+list       := "[" *{ expression "," } ?( expression ) "]"
 name        := letter ?( *{ letter | digit } ) 
-subscript   := "[" ?( expression ) "]"
+subscript   := "[" twople "]"
 equation    := "(" expression ?( operator expression ) ")"
 flowpoint   := "#{" *{ name "," } ?( name ) "}"
 glom        := "@{" *{ expression "," } ?( expression ) "}"
@@ -28,9 +28,8 @@ block       := "{" *{ statement ";" } ?( statement ) "}"
 twople      := expression ":" expression
 dict        := "${" *{ twople "," } ?( twople ) "}"
 filter      := "?{" *{ twople "," } ?( twople ) "}"
-exprvalue   := block | filter | dict | glom | unglom | equation | subbable ?( *{ subscript } ) | integer | this  | glob
+exprvalue   := block | filter | dict | glom | unglom | subscript | equation | name | list | string | integer | this  | glob
 expression  := ?( invoke | lift ) exprvalue
-subbable    := name | array | string
 file        := *{ statement ";" } ?( statement )
 
 

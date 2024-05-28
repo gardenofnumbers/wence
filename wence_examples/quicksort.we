@@ -1,10 +1,10 @@
 #{stdlib} -> ~{
     #{swap} -> {
-        !{arr, lo, hi} -> @{(lo - 1), lo, arr[hi]} -> ~{
+        !{arr, lo, hi} -> @{(lo - 1), lo, [arr:hi]} -> ~{
             !{i, j, v} -> @{_} -> !{r} -> ?{
                 (j <= hi) : { 
                     ?{
-                        (arr[j] < v) : {
+                        ([arr:j] < v) : {
                             @{arr, (i+1), j} -> ~swap; 
                             @{(i+1), (j+1), v} -> ~r; 
                         }, 
@@ -33,9 +33,9 @@
     } -> #{quicksort};
     
     {
-        !{arr, i, j} -> @{arr[i], arr[j]} -> !{vi, vj} -> ~{
-            vi -> arr[i]; 
-            vj -> arr[j];
+        !{arr, i, j} -> @{[arr:i], [arr:j]} -> !{vi, vj} -> ~{
+            vi -> [arr:i]; 
+            vj -> [arr:j];
         };
     } -> #{swap};
     
