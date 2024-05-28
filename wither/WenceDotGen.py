@@ -69,7 +69,7 @@ class WenceNode(object):
             case 'BLOCK_REF':
                 edges += f"n{self.nid} -> n{blockmap[self.value]} [color=purple]\n"         
                 
-                traverse  = lambda node: [x for xs in ([traverse (node[x]) for x in node if type(node[x]) == dict and type(x) == int] if 0 in node else [[node['nid']]]) for x in xs]    
+                traverse  = lambda node: [x for xs in ([traverse (node[x]) for x in node if type(node[x]) == dict and type(x) == int] if (0 in node or 9090 in node) else [[node['nid']]]) for x in xs]    
                 for n in nodelist:
                     if n.nid == blockmap[self.value]:
                         self.subgraph = traverse(n.node);
