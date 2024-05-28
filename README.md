@@ -4,7 +4,7 @@ Wither: a Declarative Language for parsing
 
 WIP - Please begin by reading [Language.md](Language.md)
 
-usage: `python3.10 main.py wence.wi <source>`
+usage: `python3.10 main.py wence.wi <in: *.we> <out: *.dot>`
 
 This runs the wither interpreter and wence compiler using the given grammer and wence source to produce a wence tree
 
