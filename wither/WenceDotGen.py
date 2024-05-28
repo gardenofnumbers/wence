@@ -27,9 +27,8 @@ class WenceNode(object):
         
         if 0 in node:
             #recurse structural descendants
-            flatten = lambda xss: [x for xs in xss for x in xs]
-            recurse = lambda node: flatten([recurse(node[x]) for x in node if type(node[x]) == dict and type(x) == int] if 0 in node else [[node['nid']]])    
-            self.subgraph = recurse(node)
+            traverse  = lambda node: [x for xs in ([traverse (node[x]) for x in node if type(node[x]) == dict and type(x) == int] if 0 in node else [[node['nid']]]) for x in xs]    
+            self.subgraph = traverse (node)
             if DEBUG_FOLD:
                 print(node['nid'], "\n", self.subgraph)
         else:
