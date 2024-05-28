@@ -16,7 +16,10 @@ def _called(f):
     return _impl
 
 class WenceCompilerPass1(object):
-    """
+
+    @_called
+    def P1_statement(self, node, parent, idx):
+        """
             TODO: Load bearing jank. 
             we're passing around dict-trees, with 0..N being used for children, and other keys used for node values
             We want to restructure the graph and mark an edge for flow, but due to legacy reasons the edges had to be numeric. 
@@ -24,8 +27,6 @@ class WenceCompilerPass1(object):
 
             This badly needs refactoring.
         """
-    @_called
-    def P1_statement(self, node, parent, idx):
         #construct flow-chain from statement
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
         first = children[0]
@@ -38,13 +39,13 @@ class WenceCompilerPass1(object):
         return True
     
 
-    """
-        This feels kinda weird, since we don't usually inspect the parent this deeply.
-        However, the compiler is designed this way for a reason
-        If it can be done, it might as well be
-    """
     @_called
     def P1_flowpoint(self, node, parent, idx):
+        """
+            This feels kinda weird, since we don't usually inspect the parent this deeply.
+            However, the compiler is designed this way for a reason
+            If it can be done, it might as well be
+        """
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
         node['value'] = []
         node['flow_id'] = self.flow_id;
@@ -66,12 +67,12 @@ class WenceCompilerPass1(object):
         return True
     
 
-    """
-        TODO: Maybe allow equations with only 1 child (e.g. (1) )
-        TODO: Maybe rework equations generally tbh it's fairly legacy wither
-    """
     @_called
     def P1_equation(self, node, parent, idx):
+        """
+            TODO: Maybe allow equations with only 1 child (e.g. (1) )
+            TODO: Maybe rework equations generally tbh it's fairly legacy wither
+        """
         children = [node[x] for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
         operator    = children[1];
         operator[0] = children[0];
@@ -83,9 +84,8 @@ class WenceCompilerPass1(object):
         return True
     
     """
-        More sane passes from here
+        More sane passes from here out
     """
-
     @_called
     def P1_unglom(self, node, parent, idx):
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
