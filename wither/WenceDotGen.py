@@ -6,11 +6,9 @@ from pprint import PrettyPrinter; pp = PrettyPrinter().pprint
 import code; 
 DEBUG_WALKER = False
 DEBUG_DOT = False
-DEBUG_FOLD = True
-
-RENDER_CLUSTERS = True
+DEBUG_FOLD = False
 """
-    First effort at dot based frontend. Transforms the dict tree into a node based cyclic digraph, and emits DOT.
+    dot based frontend. Transforms the dict tree into a node based cyclic digraph, and emits DOT.
 """
 
 class WenceNode(object):
@@ -205,9 +203,9 @@ class WenceDotGen():
         def emit_groups(sgl):    
             for gid,sg in [(gid,sgl[gid]) for gid in sgl]:
                 if all(isinstance(_, int) for _ in sg):
-                    yield f'subgraph cluster{gid} {{  n{gid};{";".join(map(lambda n: f"n{n}", sg))} }}\n'
+                    yield f'subgraph cluster{gid} {{ label={gid}; n{gid};{";".join(map(lambda n: f"n{n}", sg))} }}\n'
                 else:
-                    s = f'subgraph cluster{gid} {{  n{gid}; {";".join([ f"n{_}" for _ in sg if isinstance(_, int) ])}\n'
+                    s = f'subgraph cluster{gid} {{ label={gid}; n{gid}; {";".join([ f"n{_}" for _ in sg if isinstance(_, int) ])}\n'
                     z = list(chain(*[emit_groups(_) for _ in sg if not isinstance(_, int) ]))
                     yield s;
                     for _ in z:
