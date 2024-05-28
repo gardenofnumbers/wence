@@ -35,14 +35,14 @@ class WenceNode(object):
         edges = ""
         #build output edges
         for d in self.flow:
-            edges += f'n{self.nid} -> n{d} [label=flow]\n'
+            edges += f'n{self.nid} -> n{d} [label=flow color=green]\n'
         #build data edges
         for d in self.data:
-            edges += f'n{self.nid} -> n{d} [label=data]\n'
+            edges += f'n{self.nid} -> n{d} [label=data color=blue]\n'
         
         #handle block flow:
         if self.id == 'BLOCK_REF':
-            edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block]"
+            edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block color=purple]"
         if self.id == "FLOWPOINT" and "flow_to" in self.node:
             #import code; code.interact(local=locals());
             flatten = lambda xss: [x for xs in xss for x in xs]
