@@ -6,6 +6,7 @@ from pprint import PrettyPrinter; pp = PrettyPrinter().pprint
 import code; 
 DEBUG_WALKER = False
 DEBUG_DOT = False
+DEBUG_FOLD = False
 
 RENDER_CLUSTERS = True
 """
@@ -27,9 +28,10 @@ class WenceNode(object):
         if 0 in node:
             #recurse structural descendants
             flatten = lambda xss: [x for xs in xss for x in xs]
-            recurse = lambda node: flatten([recurse(node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090] if 0 in node else [[node['nid']]])    
+            recurse = lambda node: flatten([recurse(node[x]) for x in node if type(node[x]) == dict and type(x) == int] if 0 in node else [[node['nid']]])    
             self.subgraph = recurse(node)
-            print(node['nid'], "\n", self.subgraph)
+            if DEBUG_FOLD:
+                print(node['nid'], "\n", self.subgraph)
         else:
             self.subgraph = None
 
@@ -162,41 +164,47 @@ class WenceDotGen():
                     return sgl
                 m = sgl[ks[0]]
                 z =  [x for xs in traverse(m) for x in xs]
-                t = sgl[ks[1]] 
-                if not any(_ in t for _ in z):
-                    return sgl;
-                sgl[ks[1]] = [_ for _ in t if _ not in z] + [{ ks[0] : m }] # 
+                i = 1;
+                while i < len(ks)-1:
+                    t = sgl[ks[i]] 
+                    if not any(_ in t for _ in z):
+                        i += 1
+                    else:
+                        if DEBUG_FOLD:
+                            print(f"yipi! fold   {ks[0]}:{m}\n\tinto {ks[i]}:{t}")
+                        break;
+                        
+                else:
+                    return sgl
+                sgl[ks[i]] = [_ for _ in t if _ not in z] + [{ ks[0] : m }] # 
                 del sgl[ks[0]];
                 return fold(sgl) 
+            
             fold(sgl)
             ks = sorted(sgl.keys())[::-1] 
             o[ks[0]] = sgl[ks[0]] ; del sgl[ks[0]];
             
             return transform(sgl, o) if sgl != {} else o
-
-        
-        groups = transform(subgraphs)
-
-        
-        pp(groups)
-        print("Emitting subgraphs")
+        pp(subgraphs)
+        sgl = transform(subgraphs)
+        pp(sgl)
         
         #wow generators are kinda sexy ngl
         def emit_groups(sgl):    
             for gid,sg in [(gid,sgl[gid]) for gid in sgl]:
-                print(f"do {gid} : {sg}")
+                if DEBUG_FOLD:
+                    print(f"do {gid} : {sg}")
                 if all(isinstance(_, int) for _ in sg):
                     yield f'subgraph cluster{gid} {{ label={gid} n{gid};{";".join(map(lambda n: f"n{n}", sg))} }}\n'
                 else:
                     s = f'subgraph cluster{gid} {{ label={gid} n{gid}; {";".join([ f"n{_}" for _ in sg if isinstance(_, int) ])}\n'
-                    z = list(*[emit_groups(_) for _ in sg if not isinstance(_, int) ])
-                    #code.interact(local=locals())
+                    z = list(chain(*[emit_groups(_) for _ in sg if not isinstance(_, int) ]))
                     yield s;
                     for _ in z:
                         yield _;
                     yield "}"
                     
-        return out + "".join(list(emit_groups(groups))) + "}"
+        return out + "".join(list(emit_groups(sgl))) + "}"
             
 
         
