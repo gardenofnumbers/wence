@@ -11,7 +11,6 @@ def _called(f):
     def _impl(self, *method_args, **method_kwargs):
         self.do_more = True
         method_output = f(self, *method_args, **method_kwargs)
-        method_args[0]['p1'] = True
         return method_output
     return _impl
 
@@ -150,5 +149,5 @@ class WenceCompilerPass1(object):
                 hidx += 1
                 if hidx == len(self.handlers):
                     break;
-        return self.blocks
+        return self
 

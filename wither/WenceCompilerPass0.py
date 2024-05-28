@@ -125,5 +125,5 @@ class WenceCompilerPass0(object):
             if not self.do_more:
                 break
         
-        return self.blocks
+        return self
         

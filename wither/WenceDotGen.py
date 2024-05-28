@@ -1,8 +1,13 @@
 import json
 from functools import wraps
 from collections import defaultdict 
+from itertools import chain
+from pprint import PrettyPrinter; pp = PrettyPrinter().pprint
+import code; 
 DEBUG_WALKER = False
 DEBUG_DOT = False
+
+RENDER_CLUSTERS = True
 """
     First effort at dot based frontend. Transforms the dict tree into a node based cyclic digraph, and emits DOT.
 """
@@ -18,8 +23,19 @@ class WenceNode(object):
             self.value = None
         
         self.in_block = node['in_block'] if 'in_block' in node else None;
-        self.data = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x != 9090]
-        self.flow = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x == 9090]
+        
+        if 0 in node:
+            #recurse structural descendants
+            flatten = lambda xss: [x for xs in xss for x in xs]
+            recurse = lambda node: flatten([recurse(node[x]) for x in node if type(node[x]) == dict and type(x) == int and x != 9090] if 0 in node else [[node['nid']]])    
+            self.subgraph = recurse(node)
+            print(node['nid'], "\n", self.subgraph)
+        else:
+            self.subgraph = None
+
+        self.data = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x != 9090 ]
+        self.flow = [ node[x]['nid'] for x in node if type(node[x]) == dict and type(x) == int and x == 9090 ]
+
         if DEBUG_DOT:
             print(f"{self.id} {self.nid} {self.data} -> {self.flow}")
        
@@ -41,26 +57,27 @@ class WenceNode(object):
         if self.in_block is None:
             node = f'n{self.nid} [label="{label}"]\n'
         else:
-            node = f'n{self.nid} [label="{label}" group=cluster{self.in_block}]\n'
+            node = f'n{self.nid} [label="{label}" group=g{self.in_block}]\n'
 
         edges = ""
         #build output edges
         for d in self.flow:
             edges += f'n{self.nid} -> n{d} [label=flow color=green]\n'
-        #build data edges - these go away as compilation improves
-        for d in self.data:
-            edges += f'n{self.nid} -> n{d} [color=grey]\n'
-        
+
+        #build data edges - these can go away as compilation improves
+        if len(self.data):
+            for d in self.data:
+                edges += f'n{self.nid} -> n{d} [color=grey]\n'
         #handle special edges;
         match self.id:
             case 'BLOCK_REF':
-                edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block color=purple]"
+                edges += f"n{self.nid} -> n{blockmap[self.value]} [label=block color=purple]\n"
             case "FLOWPOINT":
                 if "flow_to" in self.node:
                     #import code; code.interact(local=locals());
                     flatten = lambda xss: [x for xs in xss for x in xs]
                     edges += "\n".join(flatten([ [f'n{self.nid} -> n{v} [label="flow->{l}" color=red]' for v in f] for (l,f) in [ (l, flowmap[l]) for l in self.value ] ]))
-        return node + edges
+        return (self.nid, self.subgraph), node + edges
     
 class WenceDotGen():
 
@@ -71,8 +88,8 @@ class WenceDotGen():
         self.types = set()
         self.output = ""
         self.blockmap = {} 
-        self.flowmap_f  = defaultdict(lambda: set())
-        self.flowmap_t  = defaultdict(lambda: set())
+        self.flowmap  = defaultdict(lambda: set())
+
         self.node_list = []
         self.cur_block = None;
 
@@ -100,8 +117,7 @@ class WenceDotGen():
                 for label in node['value']:
                     if DEBUG_WALKER:
                         print(f"add {label}->{node['nid']}")
-                    self.flowmap_f[label].add(node['nid'])
-
+                    self.flowmap[label].add(node['nid'])   
         #walk children
         children = [(x, node[x]) for x in node if type(node[x]) == dict and type(x) == int]
         if DEBUG_WALKER:
@@ -111,26 +127,79 @@ class WenceDotGen():
         for (idx, child) in children:
             self.walk(child, depth+1)
 
-        
-        
-        """
-            Todo: Maybe refactor so that this block_id -> node id transformation doesn't need to happen. 
-                  Worried about confusion down the line with this sort of opaque juggling
-        """
-
-            
         self.node_list.append(WenceNode(node))
                 
-    def generate(self):
+    def compile(self):
         for block in self.blocks:
             self.walk(block);
-        print(dict(self.flowmap_f))
-        print(dict(self.flowmap_t))
-        z = "\n"
-        return f"""digraph G {{
-            {z.join([n.emit(self.blockmap, self.flowmap_f) for n in self.node_list])}
-        }}
-        """
+        if DEBUG_DOT:
+            print(dict(self.flowmap))
+        return self
+    def emit(self):
+        out = "digraph G {\n"
+        subgraphs = {}
+        for (nid, sg), v in [n.emit(self.blockmap, self.flowmap) for n in self.node_list]:
+            if sg is not None:
+                subgraphs[nid] = sg;
+            out += v;
+        
+        def transform(sgl, o={}):
+            def fold(sgl):
+                #warning: insane generator 
+                def traverse(m):
+                    assert type(m) == type([])
+                    for i,v in enumerate(m):
+                        assert (type(v) == type({}) or type(v) == type(0))
+                        match v:
+                            case dict():
+                                j = list(v.keys())[0]
+                                yield [j]
+                                yield list(chain(*traverse(v[j])))
+                            case int():
+                                yield [v];
+                ks = sorted(sgl.keys())[::-1]
+                if len(ks) < 2:
+                    return sgl
+                m = sgl[ks[0]]
+                z =  [x for xs in traverse(m) for x in xs]
+                t = sgl[ks[1]] 
+                if not any(_ in t for _ in z):
+                    return sgl;
+                sgl[ks[1]] = [_ for _ in t if _ not in z] + [{ ks[0] : m }] # 
+                del sgl[ks[0]];
+                return fold(sgl) 
+            fold(sgl)
+            ks = sorted(sgl.keys())[::-1] 
+            o[ks[0]] = sgl[ks[0]] ; del sgl[ks[0]];
+            
+            return transform(sgl, o) if sgl != {} else o
+
+        
+        groups = transform(subgraphs)
+
+        
+        pp(groups)
+        print("Emitting subgraphs")
+        
+        #wow generators are kinda sexy ngl
+        def emit_groups(sgl):    
+            for gid,sg in [(gid,sgl[gid]) for gid in sgl]:
+                print(f"do {gid} : {sg}")
+                if all(isinstance(_, int) for _ in sg):
+                    yield f'subgraph cluster{gid} {{ label={gid} n{gid};{";".join(map(lambda n: f"n{n}", sg))} }}\n'
+                else:
+                    s = f'subgraph cluster{gid} {{ label={gid} n{gid}; {";".join([ f"n{_}" for _ in sg if isinstance(_, int) ])}\n'
+                    z = list(*[emit_groups(_) for _ in sg if not isinstance(_, int) ])
+                    #code.interact(local=locals())
+                    yield s;
+                    for _ in z:
+                        yield _;
+                    yield "}"
+                    
+        return out + "".join(list(emit_groups(groups))) + "}"
+            
+
+        
     
         
         

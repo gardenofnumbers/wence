@@ -36,14 +36,12 @@ class WenceCompiler(object):
               as is, DotGen takes a blocks array, just need to refactor the other two compile() calls. Just being lazy for now
     """
     def compile(self):
-        p0 = WenceCompilerPass0(self.ast, self.walker);
-        blocks = p0.compile()
-        p1 = WenceCompilerPass1(self.ast, blocks, self.walker);
-        blocks = p1.compile()
+        p0 = WenceCompilerPass0(self.ast, self.walker).compile();
+        p1 = WenceCompilerPass1(self.ast, p0.blocks, self.walker).compile();
         
-        dot = WenceDotGen([self.ast] + blocks)
+        dot = WenceDotGen([self.ast] + p1.blocks).compile()
 
-        return dot.generate(), dot.blocks
+        return dot.emit(), dot.blocks
     
 
         
